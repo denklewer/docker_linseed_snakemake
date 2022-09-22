@@ -122,7 +122,7 @@ with open(os.path.join(options.reports_path,"{0}.html".format(DT_STAMP)),"w+") a
         config_dict['dataset']=options.dataset
         config_dict['analysis_name']="{0}_ct{1}".format(options.analysis_name,ct)
         config_dict['blocks_pipeline']="config/blocks.csv"
-        config_dict['count']={'time':6000,'mem_ram':32,'threads':8,'email':"aladyeva.e@wustl.edu",'nodes':-1,'docker':"dockerreg01.accounts.ad.wustl.edu/artyomov_lab/docker_linseed_snakemake:cpp"}
+        config_dict['count']={'time':6000,'mem_ram':32,'threads':8,'email':"aladyeva.e@wustl.edu",'nodes':-1,'docker':"{0}:{1}".format(options.docker_image,options.docker_tag)}
         with open(os.path.join(WORK_DIR,"config",'config.yaml'), 'w+') as ff:
             yaml.dump(config_dict, ff, allow_unicode=True, default_flow_style=False)
 
