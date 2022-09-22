@@ -1,3 +1,0 @@
-block_name,coef_der_X,coef_der_Omega,coef_hinge_H,coef_hinge_W,coef_pos_D_h,coef_pos_D_w,iterations
-block_1,0.001,0.001,1,10,0,0,1000
-block_2,0.001,0.001,1,10,0,0,4000
