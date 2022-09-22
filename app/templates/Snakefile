@@ -1,0 +1,192 @@
+configfile: "config/config.yaml"
+
+localrules: all, select_best, make_inits
+
+import datetime as dt
+import os
+INITS_NAMES = [config["analysis_name"]+"_"+str(i) for i in range(1,config["num_inits"]+1)]
+
+if "dt" not in config.keys():
+    #DT_STAMP = "20220802_220422"
+    DT_STAMP = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
+else:
+    DT_STAMP = config["dt"]
+UNIQUE_PATH = os.path.join("results",DT_STAMP)
+
+rule all:
+    input:
+        expand(["results/{run_id}/best/trajectory.png",
+                "results/{run_id}/best/init_id.stamp",
+                "results/{run_id}/stats/merged_stats.tsv",
+                 "results/{run_id}/plots/{sample}/trajectory.png",
+                 "reports/{run_id}.html"],
+                 run_id=DT_STAMP,
+                 sample=INITS_NAMES)
+
+
+rule apply_filters:
+    output:
+        dataset = "resources/preprocess/dataset.rds",
+        top_mad = "resources/preprocess/topMAD.png",
+        distance_before = "resources/preprocess/distancesBefore.png",
+        distance_after = "resources/preprocess/distancesAfter.png",
+        svd_before = "resources/preprocess/svdBefore.png",
+        svd_before_plot = "resources/preprocess/svdBeforeToPlot.rds",
+        svd_after = "resources/preprocess/svdAfter.png",
+	    metadata = "resources/preprocess/dataset.txt"
+    params:
+        dataset = f"resources/datasets/{config['dataset']}.rds",
+        top_mad_joined = "resources/preprocess/topMAD_joined.png",
+        mad_med_scatter = "resources/preprocess/mad-med.png"
+    threads: config['count']['threads']
+    resources:
+        mem_ram=config['count']['mem_ram'],
+        time=config['count']['time'],
+        email=config['count']['email'],
+        nodes=config['count']['nodes'],
+        docker=config['count']['docker']
+    script:
+        "/app/scripts/PrepareDataset.R"
+    
+rule make_inits:
+    input:
+        ancient("resources/preprocess/dataset.rds")
+    output:
+        expand("resources/inits/{sample}.rds",
+            sample=INITS_NAMES)
+    threads: config['count']['threads']
+    resources:
+        mem_ram=config['count']['mem_ram'],
+        time=config['count']['time'],
+        email=config['count']['email'],
+        nodes=config['count']['nodes'],
+        docker=config['count']['docker']
+    script:
+        "/app/scripts/MakeInits.R"
+
+Path(UNIQUE_PATH).mkdir(parents=True, exist_ok=True)
+
+rule run_optimization:
+    input:
+        init_file = ancient("resources/inits/{sample}.rds"),
+        dataset = ancient("resources/preprocess/dataset.rds")
+    output:
+        meta="results/{run_id}/meta/{sample}.meta",
+        proportions="results/{run_id}/props/{sample}_proportions.tsv",
+        basis_row="results/{run_id}/basis_row/{sample}_basis_fc.tsv",
+        basis_column="results/{run_id}/basis_col/{sample}_basis_fc_clmn.tsv",
+        stats="results/{run_id}/stats/{sample}_stats.tsv"
+    threads: config['count']['threads']
+    resources:
+        mem_ram=config['count']['mem_ram'],
+        time=config['count']['time'],
+        email=config['count']['email'],
+        nodes=config['count']['nodes'],
+        docker=config['count']['docker']
+    params:
+        blocks_pipeline = config["blocks_pipeline"]
+    log:
+        "logs/{run_id}/optimization/{sample}.log"
+    script: 
+        "/app/scripts/RunDeconvolution.R"
+
+rule make_plots:
+    input:
+        "results/{run_id}/meta/{sample}.meta"
+    output:
+        "results/{run_id}/plots/{sample}/trajectory.png",
+        "results/{run_id}/plots/{sample}/negative_proportions.png",
+        "results/{run_id}/plots/{sample}/negative_basis.png",
+        "results/{run_id}/plots/{sample}/sum_to_one_const.png",
+        "results/{run_id}/points/{sample}_points.rds"
+    threads: config['count']['threads']
+    resources:
+        mem_ram=config['count']['mem_ram'],
+        time=config['count']['time'],
+        email=config['count']['email'],
+        nodes=config['count']['nodes'],
+        docker=config['count']['docker']
+    log:
+        "logs/{run_id}/plots/{sample}.log"
+    script: 
+        "/app/scripts/MakePlots.R"
+        
+rule select_best:
+    input:
+        plots = ["results/{run_id}/plots/{sample}/trajectory.png".format(run_id=DT_STAMP,
+                                                sample=sample) for sample in INITS_NAMES],
+        stats = ["results/{run_id}/stats/{sample}_stats.tsv".format(run_id=DT_STAMP,
+                                                sample=sample) for sample in INITS_NAMES],
+        basis_col = ["results/{run_id}/basis_col/{sample}_basis_fc_clmn.tsv".format(run_id=DT_STAMP,
+                                                sample=sample) for sample in INITS_NAMES],
+        points = ["results/{run_id}/points/{sample}_points.rds".format(run_id=DT_STAMP,
+                                                sample=sample) for sample in INITS_NAMES],
+    params:
+        run_id = DT_STAMP
+    threads: config['count']['threads']
+    resources:
+        mem_ram=config['count']['mem_ram'],
+        time=config['count']['time'],
+        email=config['count']['email'],
+        nodes=config['count']['nodes'],
+        docker=config['count']['docker']
+    output:
+        "results/{run_id}/stats/merged_stats.tsv",
+        "results/{run_id}/best/trajectory.png",
+        "results/{run_id}/best/init_id.stamp",
+        "results/{run_id}/best/negative_basis.png",
+        "results/{run_id}/best/negative_proportions.png",
+        "results/{run_id}/best/sum_to_one_const.png",
+        "results/{run_id}/best/init_points.png",
+        "results/{run_id}/best/final_points.png",
+        "results/{run_id}/best/metafile.meta",
+        "results/{run_id}/best/proportions.tsv",
+        "results/{run_id}/best/basis_row.tsv",
+        "results/{run_id}/best/basis_column.tsv",
+        "results/{run_id}/best/abundance.png",
+        "results/{run_id}/best/points.rds",
+        "results/{run_id}/best/dist_proportions.png",
+        "results/{run_id}/best/dist_basis.png",
+        "results/{run_id}/best/distance_basis.png",
+        "results/{run_id}/best/distance_props.png",
+        UMAP = "results/{run_id}/plots/UMAP.png",
+        UMAP_projX = "results/{run_id}/plots/UMAP_projected_X.png",
+        UMAP_projOmega = "results/{run_id}/plots/UMAP_projected_Omega.png"
+
+    script: 
+        "/app/scripts/ProcessBestRun.R"
+
+
+rule prepare_report:
+    input:
+        expand(["results/{run_id}/stats/merged_stats.tsv",
+                "results/{run_id}/best/trajectory.png",                
+                "results/{run_id}/best/negative_basis.png",
+                "results/{run_id}/best/negative_proportions.png",
+                "results/{run_id}/best/sum_to_one_const.png",
+                "results/{run_id}/best/metafile.meta",
+                "results/{run_id}/best/proportions.tsv",
+                "results/{run_id}/best/basis_column.tsv",
+                "results/{run_id}/plots/UMAP.png",
+                "results/{run_id}/best/abundance.png",
+                "results/{run_id}/plots/UMAP_projected_X.png",
+                "results/{run_id}/plots/UMAP_projected_Omega.png",
+                "results/{run_id}/best/dist_proportions.png",
+                "results/{run_id}/best/dist_basis.png",
+                "results/{run_id}/best/distance_basis.png",
+                "results/{run_id}/best/distance_props.png"],
+                run_id=DT_STAMP)
+    params:
+        run_id = DT_STAMP
+    threads: config['count']['threads']
+    resources:
+        mem_ram=config['count']['mem_ram'],
+        time=config['count']['time'],
+        email=config['count']['email'],
+        nodes=config['count']['nodes'],
+        docker=config['count']['docker']
+    output:
+        "reports/{run_id}.html"
+
+    script: 
+        "/app/scripts/prepareReport.Rmd"
