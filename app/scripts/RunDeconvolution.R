@@ -64,7 +64,8 @@ for (idx in 1:nrow(blocks_pipeline)){
                              coef_pos_D_h = as.numeric(x["coef_pos_D_h"]),
                              coef_pos_D_w = as.numeric(x["coef_pos_D_w"]),
                              iterations = as.numeric(x["iterations"]),
-                             limit_X = x_limit)
+                             limit_X = x_limit,
+                             limit_Omega = omega_limit)
 }
 
 saveResults(tmp_snk,list(meta_path=snakemake@output[["meta"]],

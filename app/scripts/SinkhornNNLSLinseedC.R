@@ -815,7 +815,8 @@ SinkhornNNLSLinseed <- R6Class(
       coef_pos_D_w = self$coef_pos_D_w,
       iterations = self$global_iterations,
       startWithInit = F,
-      limit_X = 0
+      limit_X = 0,
+      limit_Omega = 0
     ) {
 
       R_limit_X <- 0
@@ -847,10 +848,10 @@ SinkhornNNLSLinseed <- R6Class(
         R_limit_X <- norm(self$new_points[names(self$zero_distance_genes[limit_num_X]),-1],"2")
       }
 
-      ##if (limit_Omega>0) {
-       ## limit_num_Omega <- floor(ncol(self$V_row)*limit_Omega)
-       ## R_limit_Omega <- norm(self$new_samples_points[names(self$zero_distance_samples[limit_num_Omega]),-1],"2")
-      ##}
+      if (limit_Omega>0) {
+        limit_num_Omega <- floor(ncol(self$V_row)*limit_Omega)
+        R_limit_Omega <- norm(self$new_samples_points[names(self$zero_distance_samples[limit_num_Omega]),-1],"2")
+      }
       
       step_errors_statistics <- matrix(0,nrow=iterations,ncol=10)
       step_points_statistics_X <- matrix(0,nrow=iterations,ncol=self$cell_types^2)
@@ -870,7 +871,7 @@ SinkhornNNLSLinseed <- R6Class(
                                       c(block_name, from_idx, from_idx+iterations-1,
                                         coef_der_X, coef_der_Omega, coef_hinge_H,
                                         coef_hinge_W, coef_pos_D_h, coef_pos_D_w,
-                                        iterations,limit_X,0))
+                                        iterations,limit_X,limit_Omega))
       
       colnames(self$blocks_statistics) <- c("block_name",
                                             "from", "to",
@@ -886,7 +887,8 @@ SinkhornNNLSLinseed <- R6Class(
                                coef_pos_D_w, self$cell_types, self$N, self$M,
                                iterations, step_errors_statistics, 0,
                                step_points_statistics_X, step_points_statistics_Omega,
-                               self$mean_radius_X, self$mean_radius_Omega )
+                               self$mean_radius_X, self$mean_radius_Omega,
+                               R_limit_X, R_limit_Omega)
       
       self$X <- res_[[1]]
       self$Omega <- res_[[2]]
