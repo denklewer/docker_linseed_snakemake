@@ -60,6 +60,9 @@ parser.add_option("-b", action="store_false", dest="local")
 parser.add_option("--apply_filters", action="store_true", dest="apply_filters", default=False)
 parser.add_option("--docker_image", default = "dockerreg01.accounts.ad.wustl.edu/artyomov_lab/docker_linseed_snakemake")
 parser.add_option("--docker_tag", default = "cpp")
+parser.add_option("-e","--email", default = "aladyeva.e@wustl.edu")
+parser.add_option("--restarts", type=int, default = 1)
+
 
 (options, args) = parser.parse_args()
 
@@ -122,7 +125,8 @@ with open(os.path.join(options.reports_path,"{0}.html".format(DT_STAMP)),"w+") a
         config_dict['dataset']=options.dataset
         config_dict['analysis_name']="{0}_ct{1}".format(options.analysis_name,ct)
         config_dict['blocks_pipeline']="config/blocks.csv"
-        config_dict['count']={'time':6000,'mem_ram':32,'threads':8,'email':"aladyeva.e@wustl.edu",'nodes':-1,'docker':"{0}:{1}".format(options.docker_image,options.docker_tag)}
+        config_dict['count']={'time':6000,'mem_ram':32,'threads':8,'email':options.email,
+                              'nodes':-1,'docker':"{0}:{1}".format(options.docker_image,options.docker_tag)}
         with open(os.path.join(WORK_DIR,"config",'config.yaml'), 'w+') as ff:
             yaml.dump(config_dict, ff, allow_unicode=True, default_flow_style=False)
 
@@ -135,7 +139,7 @@ with open(os.path.join(options.reports_path,"{0}.html".format(DT_STAMP)),"w+") a
             print(cmd)
             p = Popen(cmd, shell=False, stdin=None, stdout=None, stderr=None, close_fds=True)
         else:
-            snk_cmd = "snakemake --profile lsf_demo --local-cores $L_CORES --jobs 50 -pr --conda-frontend conda --restart-times 1 --rerun-incomplete"
+            snk_cmd = "snakemake --profile lsf_demo --local-cores $L_CORES --jobs 50 -pr --conda-frontend conda --restart-times {0} --rerun-incomplete".format(options.restarts)
             if options.apply_filters:
                 snk_cmd += " -f apply_filters"
             cmd = """ P_WD=`pwd`; mkdir -p "$P_WD/tmp";
