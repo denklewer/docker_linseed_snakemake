@@ -383,8 +383,8 @@ SinkhornNNLSLinseed <- R6Class(
       self$distance_genes <- sort(self$distance_genes,decreasing=T)
       self$distance_samples <- sort(self$distance_samples,decreasing=T)
 
-      self$zero_distance_genes <- sort(apply(self$new_points,1,function(x) sqrt(sum(x^2))))
-      self$zero_distance_samples <- sort(apply(self$new_samples_points,1,function(x) sqrt(sum(x^2))))
+      self$zero_distance_genes <- sort(apply(self$new_points[,-1],1,function(x) sqrt(sum(x^2))))
+      self$zero_distance_samples <- sort(apply(self$new_samples_points[,-1],1,function(x) sqrt(sum(x^2))))
     },
     
     plotDistances = function() {
