@@ -144,9 +144,8 @@ with open(os.path.join(options.reports_path,"{0}.html".format(DT_STAMP)),"w+") a
                 snk_cmd += " -f apply_filters"
             cmd = """ P_WD=`pwd`; mkdir -p "$P_WD/tmp";
                 echo "__LSF_JOB_CUSTOM_TMPDIR__=$P_WD/tmp" > lsf_docker_env_file.env;
-                chmod a+r lsf_docker_env_file.env;  LSF_DOCKER_ENV_FILE=$P_WD/lsf_docker_env_file.env;
-                export SMK_DOCKER_IMG="{1}:{2}";
-                export P_LOG=$P_WD/logs/pipeline.log;  L_CORES=4; LSF_DOCKER_ENV_FILE=$P_WD/lsf_docker_env_file.env; mkdir -p logs;
+                chmod a+r lsf_docker_env_file.env; export SMK_DOCKER_IMG="{1}:{2}";
+                export P_LOG=$P_WD/logs/pipeline.log; export L_CORES=4; export LSF_DOCKER_ENV_FILE=$P_WD/lsf_docker_env_file.env; mkdir -p logs;
                 bsub -cwd $HOME -n $L_CORES -G compute-martyomov -q general -oo $P_LOG -R 'span[hosts=1]' -a "docker($SMK_DOCKER_IMG)" /usr/bin/script -fqe /dev/null  -c "source /etc/bash.bashrc; cd $P_WD; export TMPDIR=$P_WD/tmp; {0}" """.format(snk_cmd,
                 options.docker_image,
                 options.docker_tag)
