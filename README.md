@@ -13,6 +13,8 @@
 ...
 ## track snakemake logs
 ```{bash}
+P_LOG="logs/pipeline.log"
 touch -f $P_LOG && tail -f $P_LOG
+
 touch -f ./logs/pipeline.log && tail -f ./logs/pipeline.log
 ```
