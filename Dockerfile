@@ -3,6 +3,7 @@ FROM dockerreg01.accounts.ad.wustl.edu/artyomov_lab/linseed_v2:nnls_d_cpp
 RUN R -e "install.packages('rmarkdown')"
 RUN R -e "install.packages('uwot')"
 RUN R -e "install.packages('ggpubr')"
+RUN R -e "install.packages('dbscan')"
 
 RUN  apt-get update \
   && apt-get install -y wget \
