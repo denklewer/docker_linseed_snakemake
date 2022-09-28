@@ -55,6 +55,7 @@ LinseedMetadata <- R6Class(
       points_statistics_X = NULL,
       points_statistics_Omega = NULL,
       blocks_statistics = NULL,
+      filters_pipeline = NULL,
 
       initialize = function(linseed_object) {
         self$filtered_dataset <- linseed_object$filtered_dataset
@@ -112,6 +113,8 @@ LinseedMetadata <- R6Class(
         self$distance_samples <- linseed_object$distance_samples
         self$mean_radius_X <- linseed_object$mean_radius_X
         self$mean_radius_Omega <- linseed_object$mean_radius_Omega
+
+        self$filters_pipeline <- linseed_object$filters_pipeline
 
       }
   )

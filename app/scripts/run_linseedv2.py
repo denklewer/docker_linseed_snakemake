@@ -52,7 +52,11 @@ parser.add_option("--max_median", type=int)
 parser.add_option("--thresh", type=int)
 parser.add_option("--filter_genes", type=int, default=0)
 parser.add_option("--filter_samples", type=int, default=0)
+parser.add_option("--thresh_genes", type=int, default=0)
+parser.add_option("--thresh_samples", type=int, default=0)
 parser.add_option("--scale_iterations", type=int, default=20)
+parser.add_option("--k_genes", type=int, default=25)
+parser.add_option("--k_samples", type=int, default=25)
 parser.add_option("--min_ct", type=int)
 parser.add_option("--max_ct", type=int)
 parser.add_option("-l", action="store_true", dest="local", default=True)
@@ -102,6 +106,8 @@ with open(os.path.join(options.reports_path,"{0}.html".format(DT_STAMP)),"w+") a
 
         config_dict = {}
         config_dict['num_inits']=options.num_inits
+        config_dict['k_genes']=options.k_genes
+        config_dict['k_samples']=options.k_samples
         if not options.top_mad is None:
             config_dict['top_mad']=options.top_mad
         if not options.top_median is None:
@@ -118,6 +124,8 @@ with open(os.path.join(options.reports_path,"{0}.html".format(DT_STAMP)),"w+") a
             config_dict['thresh']=options.thresh
         config_dict['filter_genes']=options.filter_genes
         config_dict['filter_samples']=options.filter_samples
+        config_dict['thresh_genes']=options.thresh_genes
+        config_dict['thresh_samples']=options.thresh_samples
         config_dict['scale_iterations']=options.scale_iterations
         config_dict['init_strategy']=options.init_strategy
         config_dict['cell_types']=ct

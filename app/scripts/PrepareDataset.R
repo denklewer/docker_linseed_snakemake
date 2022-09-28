@@ -14,7 +14,9 @@ tmp_snk <- SinkhornNNLSLinseed$new(dataset = snakemake@config[["dataset"]],
                                     path = snakemake@output[[1]], 
                                     data = data_,
                                     analysis_name = snakemake@config[["analysis_name"]],
-                                    cell_types = snakemake@config[["cell_types"]])
+                                    cell_types = snakemake@config[["cell_types"]],
+                                    k_genes = snakemake@config[["k_genes"]],
+                                    k_samples = snakemake@config[["k_samples"]])
 print(tmp_snk$cell_types)
 if (!is.null(snakemake@config[["top_median"]])){
     tmp_snk$metric <- "median"
@@ -76,9 +78,23 @@ plotSVD(tmp_snk,snakemake@output[["svd_before_plot"]])
 dev.off()
 tmp_snk$getSvdProjectionsNew()
 tmp_snk$calculateDistances()
+png(snakemake@output[["knn_distance_before"]])
+plotKNNDistances(tmp_snk,snakemake@config[["thresh_genes"]],snakemake@config[["thresh_samples"]])
+dev.off()
+
+tmp_snk$filterByKNN(thresh_genes = snakemake@config[["thresh_genes"]],
+                    thresh_samples = snakemake@config[["thresh_samples"]],
+                    iterations = snakemake@config[["scale_iterations"]])
+
+tmp_snk$calculateDistances()
+png(snakemake@output[["knn_distance_after"]])
+plotKNNDistances(tmp_snk,snakemake@config[["thresh_genes"]],snakemake@config[["thresh_samples"]])
+dev.off()
+
 png(snakemake@output[["distance_before"]])
 plotDistances(tmp_snk,snakemake@config[["filter_genes"]],snakemake@config[["filter_samples"]])
 dev.off()
+
 tmp_snk$filterByDistance(filter_genes = snakemake@config[["filter_genes"]],
                          filter_samples = snakemake@config[["filter_samples"]],
                          iterations = snakemake@config[["scale_iterations"]])

@@ -8,6 +8,7 @@ library(corpcor)
 library(MASS)
 library(nnls)
 library(gridExtra)
+library(dbscan)
 
 SinkhornNNLSLinseed <- R6Class(
   "SinkhornNNLSLinseed",
@@ -39,11 +40,15 @@ SinkhornNNLSLinseed <- R6Class(
     distance_samples = NULL,
     zero_distance_genes = NULL,
     zero_distance_samples = NULL,
+    knn_distance_genes = NULL,
+    knn_distance_samples = NULL,
     merged_distance_genes = NULL,
     merged_distance_samples = NULL,
+    k_neighbours_genes = NULL,
+    k_neighbours_samples = NULL,
     mean_radius_X = NULL,
     mean_radius_Omega = NULL,
-    filters_pipeline = matrix(0,nrow=0,ncol=2),
+    filters_pipeline = matrix(0,nrow=0,ncol=3),
     data = NULL,
     V_row = NULL,
     V_column = NULL,
@@ -150,10 +155,11 @@ SinkhornNNLSLinseed <- R6Class(
     
     preprocessing = function(dataset) {
       genes_names <- readRDS("/app/scripts/coding_genes.rds")
+      samples <- ncol(dataset)
       
       step0 <- nrow(dataset)
       print(paste0("Genes before filtering: ",step0," genes"))
-      filters_pipeline <- rbind(filters_pipeline,c("Original data",step0))
+      self$filters_pipeline <- rbind(self$filters_pipeline,c("Original data",step0,samples))
       
       ## filter out non-coding genes
       step0 <- nrow(dataset)
@@ -161,7 +167,7 @@ SinkhornNNLSLinseed <- R6Class(
       step1 <- nrow(dataset)
       filtered_genes <- step0-step1
       print(paste0("Removed: ",filtered_genes," genes"))
-      filters_pipeline <- rbind(filters_pipeline,c("After filtering non-coding genes",step1))
+      self$filters_pipeline <- rbind(self$filters_pipeline,c("After filtering non-coding genes",step1,samples))
       
       ## filter out RPL/RPS genes
       step0 <- nrow(dataset)
@@ -169,7 +175,7 @@ SinkhornNNLSLinseed <- R6Class(
       step1 <- nrow(dataset)
       filtered_genes <- step0-step1
       print(paste0("Removed: ",filtered_genes," genes"))
-      filters_pipeline <- rbind(filters_pipeline,c("After filtering RPL/RPS genes",step1))
+      self$filters_pipeline <- rbind(self$filters_pipeline,c("After filtering RPL/RPS genes",step1,samples))
       
       ## filter out LOC genes
       step0 <- nrow(bestGenes)
@@ -177,7 +183,7 @@ SinkhornNNLSLinseed <- R6Class(
       step1 <- nrow(bestGenes)
       filtered_genes <- step0-step1
       print(paste0("Removed: ",filtered_genes," genes"))
-      filters_pipeline <- rbind(filters_pipeline,c("After filtering LOC genes",step1))
+      self$filters_pipeline <- rbind(self$filters_pipeline,c("After filtering LOC genes",step1,samples))
       
       ## filter out C.orf genes
       step0 <- nrow(bestGenes)
@@ -185,7 +191,7 @@ SinkhornNNLSLinseed <- R6Class(
       step1 <- nrow(bestGenes)
       filtered_genes <- step0-step1
       print(paste0("Removed: ",filtered_genes," genes"))
-      filters_pipeline <- rbind(filters_pipeline,c("After filtering C.orf genes",step1))
+      self$filters_pipeline <- rbind(self$filters_pipeline,c("After filtering C.orf genes",step1,samples))
       
       ## remove zero mad genes
       step0 <- nrow(bestGenes)
@@ -195,11 +201,10 @@ SinkhornNNLSLinseed <- R6Class(
       step1 <- nrow(bestGenes)
       filtered_genes <- step0-step1
       print(paste0("Removed: ",filtered_genes," genes"))
-      filters_pipeline <- rbind(filters_pipeline,c("After removing zero mad genes",step1))
+      self$filters_pipeline <- rbind(self$filters_pipeline,c("After removing zero mad genes",step1,samples))
       
       step1 <- nrow(bestGenes)
-      print(paste0("Genes after filtering: ",step1," genes"))
-      filters_pipeline <- rbind(filters_pipeline,c("Filtered data",step1))
+      print(paste0("Genes after preprocessing: ",step1," genes"))
       
       bestGenes
     },
@@ -223,7 +228,9 @@ SinkhornNNLSLinseed <- R6Class(
                           annotate = F,
                           geneSymbol = "Gene symbol",
                           linearize = F,
-                          preprocessing = F
+                          preprocessing = F,
+                          k_genes = 25,
+                          k_samples = 25
                           ) {
       self$filtered_samples <- filtered_samples
       self$dataset <- dataset
@@ -310,6 +317,11 @@ SinkhornNNLSLinseed <- R6Class(
 
       self$N <- ncol(self$filtered_dataset)
       self$M <- nrow(self$filtered_dataset)
+
+      self$filters_pipeline <- rbind(self$filters_pipeline,c("Algorithm input data",self$M,self$N))
+
+      self$k_neighbours_genes <- min(k_genes,self$M-1)
+      self$k_neighbours_samples <- min(k_samples,self$N-1)
       
     },
     
@@ -385,6 +397,9 @@ SinkhornNNLSLinseed <- R6Class(
 
       self$zero_distance_genes <- sort(apply(self$new_points[,-1],1,function(x) sqrt(sum(x^2))))
       self$zero_distance_samples <- sort(apply(self$new_samples_points[,-1],1,function(x) sqrt(sum(x^2))))
+
+      self$knn_distance_genes <- sort(dbscan::kNNdist(self$V_row, k = self$k_neighbours_genes),decreasing=T)
+      self$knn_distance_samples <- sort(dbscan::kNNdist(t(self$V_row), k = self$k_neighbours_samples),decreasing=T)
     },
     
     plotDistances = function() {
@@ -445,6 +460,35 @@ SinkhornNNLSLinseed <- R6Class(
       self$M <- nrow(self$filtered_dataset)
       self$N <- ncol(self$filtered_dataset)
 
+      self$filters_pipeline <- rbind(self$filters_pipeline,c("Filtered by distance data",self$M,self$N))
+
+      if (reproject) {
+        self$scaleDataset(iterations)
+        self$getSvdProjectionsNew()
+      }
+    },
+
+    filterByKNN = function(thresh_genes = 0, thresh_samples = 0, 
+                           reproject = T, iterations = 100) {
+
+      keep_genes <- rownames(self$V_row)
+      keep_samples <- colnames(self$V_row)
+
+      if (thresh_genes > 0) {
+        keep_genes <- names(self$knn_distance_genes[self$knn_distance_genes<thresh_genes])
+        print(length(keep_genes))
+      }
+
+      if (thresh_samples > 0) {
+        keep_samples <- names(self$knn_distance_samples[self$knn_distance_samples<thresh_samples])
+        print(length(keep_samples))
+      }
+
+      self$top_genes <- keep_genes
+      self$filtered_dataset <- self$filtered_dataset[keep_genes,keep_samples]
+      self$M <- nrow(self$filtered_dataset)
+      self$N <- ncol(self$filtered_dataset)
+      self$filters_pipeline <- rbind(self$filters_pipeline,c("Filtered by KNN data",self$M,self$N))
       if (reproject) {
         self$scaleDataset(iterations)
         self$getSvdProjectionsNew()
