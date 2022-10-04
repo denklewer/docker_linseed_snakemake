@@ -120,7 +120,7 @@ with open(os.path.join(options.reports_path,"{0}.html".format(DT_STAMP)),"w+") a
             config_dict['min_median']=options.min_median
         if not options.max_median is None:
             config_dict['max_median']=options.max_median
-        if not options.max_median is None:
+        if not options.thresh is None:
             config_dict['thresh']=options.thresh
         config_dict['filter_genes']=options.filter_genes
         config_dict['filter_samples']=options.filter_samples
