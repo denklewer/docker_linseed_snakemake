@@ -156,3 +156,59 @@ plotKNNDistances <- function(metadata_, thresh_genes = 0, thresh_samples = 0) {
   
   grid.arrange(pltGenes,pltSamples)
 }
+
+plotMergedDistances <- function(
+    annotations,
+    col = NULL,
+    thresholds = list(
+      zero_distance = NULL,
+      knn_distance = NULL,
+      plane_distance = NULL
+    ),
+    bins = 200,
+    highlight_items = NULL
+  ) {
+    columns <- c("knn_distance", "zero_distance", "plane_distance")
+    if (!is.null(highlight_items)) {
+      annotations$highlight <- highlight_items
+      col <- "highlight"
+    }
+    
+    distr_plots <- lapply(columns, function(colname) {
+      ggplot(
+        annotations,
+        aes_string(x = colname, fill = col)
+      ) +
+        geom_histogram(bins = bins, aes(y = (..count..)/sum(..count..))) +
+        geom_vline(xintercept=thresholds[[colname]], colour = "red") +
+        ylab("frequency")
+    })
+    
+    sorted_plots <- lapply(columns, function(colname) {
+      ggplot(
+        annotations[order(annotations[, colname]),],
+        aes_string(x = 1:nrow(annotations), y = colname, col = col)
+      ) +
+        geom_hline(yintercept=thresholds[[colname]], colour = "red") +
+        geom_point(size = 0.1) +
+        xlab("order")
+    })
+    
+    if (!is.null(col)) {
+      arranged_annotations <- annotations[order(annotations[, col]),]
+    } else {
+      arranged_annotations <- annotations
+    }
+    
+    vs_plots <- apply(combn(columns, 2), 2, function(colnames) {
+      ggplot(
+        arranged_annotations,
+        aes_string(x = colnames[[1]], y = colnames[[2]], col = col)
+      ) +
+        geom_vline(xintercept=thresholds[[colnames[[1]]]], colour = "red") +
+        geom_hline(yintercept=thresholds[[colnames[[2]]]], colour = "red") +
+        geom_point(size = 0.1)
+    })
+    
+    wrap_plots(c(distr_plots, sorted_plots, vs_plots), nrow = 3, ncol = 3, guides = "collect")
+  }
