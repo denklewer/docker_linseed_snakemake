@@ -3,13 +3,7 @@ source("/app/scripts/SinkhornNNLSLinseedC.R")
 source("/app/scripts/PreprocessingPlots.R")
 sourceCpp('/app/scripts/pipeline.cpp')
 
-filterZeroMAD <- function(dataset){
-    mad_ <- apply(dataset,1,mad)
-    dataset[mad_>0,]
-}
-
 data_ <- readRDS(snakemake@params[["dataset"]])
-data_ <- filterZeroMAD(data_)
 tmp_snk <- SinkhornNNLSLinseed$new(dataset = snakemake@config[["dataset"]], 
                                     path = snakemake@output[[1]], 
                                     data = data_,
@@ -78,6 +72,14 @@ plotSVD(tmp_snk,snakemake@output[["svd_before_plot"]])
 dev.off()
 tmp_snk$getSvdProjectionsNew()
 tmp_snk$calculateDistances()
+annotations_genes <- data.frame(gene_name = rownames(tmp_snk$filtered_dataset),
+                            knn_distance = tmp_snk$knn_distance_genes[rownames(tmp_snk$filtered_dataset)],
+                            zero_distance = tmp_snk$zero_distance_genes[rownames(tmp_snk$filtered_dataset)],
+                            plane_distance = tmp_snk$distance_genes[rownames(tmp_snk$filtered_dataset)])
+png(snakemake@output[["distances_stat_before"]])
+plotMergedDistances(annotations_genes)
+dev.off()
+
 png(snakemake@output[["knn_distance_before"]])
 plotKNNDistances(tmp_snk,snakemake@config[["thresh_genes"]],snakemake@config[["thresh_samples"]])
 dev.off()
