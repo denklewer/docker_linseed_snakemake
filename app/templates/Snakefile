@@ -30,7 +30,6 @@ rule apply_filters:
         top_mad = "resources/preprocess/topMAD.png",
         distance_before = "resources/preprocess/distancesBefore.png",
         distance_after = "resources/preprocess/distancesAfter.png",
-        distances_stat_before = "resources/preprocess/distancesStatBefore.png",
         knn_distance_before = "resources/preprocess/knnDistancesBefore.png",
         knn_distance_after = "resources/preprocess/knnDistancesAfter.png",
         svd_before = "resources/preprocess/svdBefore.png",
