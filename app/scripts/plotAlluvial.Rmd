@@ -14,109 +14,79 @@ library(gridExtra)
 ```
 
 ```{r}
-min_ct <- 8
-max_ct <- 10
-top_genes <- 200
-thresh <- 0.75
-PATH <- "/Volumes/martyomov/Active/IndividualBackUps/aladyevae/deconvolution/data/results/HNSC_TPM_F_LIMITX_OMEGA_MAD_2_GENES_1000_X/09_2022"
-DT <- "20220926_172755"
+min_ct <- 7
+max_ct <- 17
+top_genes <- 300
+PATH <- "/Volumes/martyomov/Active/IndividualBackUps/aladyevae/deconvolution/data/results/HNSC_TPM_HK_CC_F_LIMITX_OMEGA_MAD_1_KNN_GENES_500_X/09_2022"
+DT <- "20221012_171716"
 ```
 
 
 ```{r}
-plist <- list()
+total.merge <- data.frame(matrix(0,ncol=0,nrow=sum(min_ct:max_ct)))
 
-for (ct in min_ct:(max_ct-1)) {
-  ct_next <- ct + 1
-  basis_1 <- fread(file.path(PATH,paste0("ct",ct),DT,"best/basis_column.tsv"))
-  props_1  <- as.data.frame(basis_1)[1,colnames(basis_1)[grepl("^Cell_",colnames(basis_1))]]
-  basis_1 <- as.data.frame(basis_1[-1,]) %>% tibble::column_to_rownames("V1")
-  
-  basis_2 <- fread(file.path(PATH,paste0("ct",ct_next),DT,"best/basis_column.tsv"))
-  props_2  <- as.data.frame(basis_2)[1,colnames(basis_2)[grepl("^Cell_",colnames(basis_2))]]
-  basis_2 <- as.data.frame(basis_2[-1,]) %>% tibble::column_to_rownames("V1")
-  
-  basis_1 <- basis_1[,colnames(basis_1)[grepl("^FC",colnames(basis_1))]]
-  basis_2 <- basis_2[,colnames(basis_2)[grepl("^FC",colnames(basis_2))]]
-  
-  test.res <- matrix(0,ct,ct_next)
-  rownames(test.res) <- paste0("Cell_type_",1:ct)
-  colnames(test.res) <- paste0("Cell_type_",1:ct_next)
-  for (ct1 in 1:ct) {
-    group_1 <- rownames((basis_1 %>% arrange(desc(.data[[paste0("FC_Cell_type_",ct1)]])))[1:top_genes,])
-    for (ct2 in 1:ct_next) {
-      group_2 <- rownames((basis_2 %>% arrange(desc(.data[[paste0("FC_Cell_type_",ct2)]])))[1:top_genes,])
-      overlap <- intersect(group_1,group_2)
-      total <- nrow(basis_1)  
-      p.val <- fisher.test(matrix(c(length(overlap), length(group_2)-length(overlap), length(group_1)-length(overlap), total-length(group_2)-length(group_1) +length(overlap)), 2, 2), alternative='greater')$p.value
-      test.res[ct1,ct2] <- p.val
-    }
-  }
-  test.res.log <- -log10(test.res+1)
-  test.res.log <- apply(test.res.log,2, FUN = function(X) (X - min(X))/diff(range(X)))
-  test.res.log[test.res.log<thresh] <- 0
-  
-  df_props_1 <- data.frame(props_1 = t(props_1),
-                           ct = names(props_1))
-  df_props_2 <- data.frame(props_2 = t(props_2),
-                           ct = names(props_2))
-  
-  toLinks <- melt(test.res.log)
-  toLinks <- toLinks[toLinks$value>0,]
-  toLinks$id <- paste0(toLinks$Var1,"_",toLinks$Var2)
-  
-  toLinks <- merge(toLinks,df_props_1,by.x = "Var1",by.y = "ct")
-  toLinks <- merge(toLinks,df_props_2,by.x = "Var2",by.y = "ct")
-  toLinks <- toLinks %>% group_by(Var1) %>% mutate(total_prop=sum(X1.y))
-  toLinks <- toLinks %>% group_by(Var2) %>% mutate(total_prop2=sum(X1.x))
-  
-  props_1_scaled <- props_1 / sum(props_1)
-  props_2_scaled <- props_2 / sum(props_2)
-  toPlot <- data.frame(run_id=rep(paste(ct,"ct"),ct),
-                       cell_type=paste0("Cell_type_",1:ct),
-                       avg_props=t(props_1_scaled))
-  toPlot <- merge(toPlot,toLinks[,c("Var1","X1.y","total_prop","total_prop2","id")],by.x = "cell_type",by.y="Var1")
-  colnames(toPlot)[4] <- "props"
-  toPlot$X1_mod <- toPlot$X1 * (toPlot$props / toPlot$total_prop)
-  
-  toPlotC <- data.frame(run_id=rep(paste(ct_next,"ct"),ct_next),
-                       cell_type=paste0("Cell_type_",1:ct_next),
-                       avg_props=t(props_2_scaled))
-  toPlotC <- merge(toPlotC,toLinks[,c("Var2","X1.x","total_prop","total_prop2","id")],by.x = "cell_type",by.y="Var2")
-  colnames(toPlotC)[4] <- "props"
-  toPlotC$X1_mod <- toPlotC$X1 * (toPlotC$props / toPlotC$total_prop2)
-  toPlot <- rbind(toPlot,toPlotC)
-  toPlot$run_id <- factor(toPlot$run_id,levels = c(paste(ct,"ct"),
-                                                   paste(ct_next,"ct")))
-  toPlot$cell_type <- factor(toPlot$cell_type, levels = c(paste0("Cell_type_",1:ct_next)))
-  plt <- ggplot(toPlot,
-          aes(x = run_id, stratum = cell_type, alluvium = id,
-           y = X1_mod, fill = cell_type, label = cell_type)) +
-        geom_flow(knot.prop=F) +
-        geom_stratum(alpha = .5) +
-        geom_text(stat = "stratum", size = 3) +
-        theme_minimal() +
-        scale_y_continuous(breaks = NULL) +
-        theme(legend.position = "none", 
-              axis.text.y = element_blank(),
-              axis.ticks.y = element_blank(),
-              axis.line.y = element_blank(),
-              axis.title = element_blank(),
-              panel.grid.major.x = element_blank())
-  plist[[paste0("ct",ct,"_ct",ct_next)]] <- plt
+for (ct in min_ct:max_ct) {
+   print(ct)
+   
+   merged.fisher.test <- NULL
+   basis_1 <- fread(file.path(PATH,paste0("ct",ct),DT,"best/basis_column.tsv"))
+   props_1  <- as.data.frame(basis_1)[1,colnames(basis_1)[grepl("^Cell_",colnames(basis_1))]]
+   basis_1 <- as.data.frame(basis_1[-1,]) %>% tibble::column_to_rownames("V1")
+   basis_1 <- basis_1[,colnames(basis_1)[grepl("^FC",colnames(basis_1))]]
+ 
+   for (ct_next in min_ct:max_ct) {
+     #ct_next <- ct + 1
+     basis_2 <- fread(file.path(PATH,paste0("ct",ct_next),DT,"best/basis_column.tsv"))
+     props_2  <- as.data.frame(basis_2)[1,colnames(basis_2)[grepl("^Cell_",colnames(basis_2))]]
+     basis_2 <- as.data.frame(basis_2[-1,]) %>% tibble::column_to_rownames("V1")
+     basis_2 <- basis_2[,colnames(basis_2)[grepl("^FC",colnames(basis_2))]]
+     
+     test.res <- matrix(0,ct,ct_next)
+     rownames(test.res) <- paste0("ct",ct,"_cell_type_",1:ct,"_",props_1)
+     colnames(test.res) <- paste0("ct",ct_next,"_cell_type_",1:ct_next,"_",props_2)
+     for (ct1 in 1:ct) {
+       group_1 <- rownames((basis_1 %>% arrange(desc(.data[[paste0("FC_Cell_type_",ct1)]])))[1:top_genes,])
+       for (ct2 in 1:ct_next) {
+         group_2 <- rownames((basis_2 %>% arrange(desc(.data[[paste0("FC_Cell_type_",ct2)]])))[1:top_genes,])
+         overlap <- intersect(group_1,group_2)
+         total <- nrow(basis_1)  
+         p.val <- fisher.test(matrix(c(length(overlap), length(group_2)-length(overlap), length(group_1)-length(overlap), total-length(group_2)-length(group_1)+length(overlap)), 2, 2), alternative='greater')$p.value
+         test.res[ct1,ct2] <- p.val
+       }
+     }
+     test.res.log <- round(-log10(test.res),3)
+     test.res.log[is.infinite(test.res.log)] <- 308.0
+     #test.res.log <- as.data.frame(cbind(ct_next,t(test.res.log)))
+     test.res.log <- as.data.frame(t(test.res.log))
+     merged.fisher.test <- rbind(merged.fisher.test,test.res.log)
+     
+   }
+   total.merge <- cbind(total.merge,merged.fisher.test)
+ }
+```
+
+```{r}
+filter_proportions <- function(data_,filter_limit=0.01){
+  data_ <- data_
+  selected_rows <- (sapply(rownames(data_),function(x) {
+     split_x <- strsplit(x,"_")[[1]]
+     as.numeric(split_x[length(split_x)])
+    })>filter_limit)
+  selected_cols <- (sapply(colnames(data_),function(x) {
+   split_x <- strsplit(x,"_")[[1]]
+   as.numeric(split_x[length(split_x)])
+  })>filter_limit)
+  toPlot <- data_[selected_rows,selected_cols]
 }
-do.call("grid.arrange", c(plist, nrow=1))
 ```
 
 
-```{r}
-pheatmap(test.res.log,scale="none",cluster_rows = F, cluster_cols = F)
+```{r, fig.width=15}
+pheatmap(filter_proportions(total.merge),scale="none")
 ```
 
-```{r}
-plt
-```
 
+write.table(filter_proportions(total.merge),file="/Volumes/martyomov/Active/IndividualBackUps/aladyevae/deconvolution/data/results/HNSC_TPM_HK_CC_F_LIMITX_OMEGA_MAD_1_KNN_GENES_500_X/09_2022/HNSC_TPM_HK_CC_F_LIMITX_OMEGA_MAD_1_KNN_GENES_500_X_merged_ct_filtered.tsv",sep="\t",col.names = NA,quote = F)
 
 
 
