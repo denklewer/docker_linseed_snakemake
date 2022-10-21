@@ -3,12 +3,7 @@ library(reshape2)
 library(tibble)
 library(ggpubr)
 
-phenodata <- as.data.frame(fread("/Users/aladyeva.e/Dropbox (ArtyomovLab)/GTEx_lung/GTEx_sample_attributes_and_subject_lung.tsv"))
-attribute <- "AGE"
-sample_column <-"SAMPID"
-PATH <- "/Volumes/martyomov/Active/IndividualBackUps/aladyevae/deconvolution/data/results/GTEX_LUNGS_TPM_HK_CC_F_LIMITX_OMEGA_MAD_1_KNN_Rand_new/09_2022"
-DT <- "20221007_220240"
-cell_types <- 14
+
 
 plotPhenodata <- function(PATH,DT,cell_types,phenodata,attribute,
                           sample_column="SAMPID",filter_=T,filter_limit=0.01){
@@ -36,4 +31,11 @@ plotPhenodata <- function(PATH,DT,cell_types,phenodata,attribute,
   p
 }
 
-plotPhenodata(PATH,DT,cell_types, phenodata, attribute)
+# Example
+# phenodata <- as.data.frame(fread("/Users/aladyeva.e/Dropbox (ArtyomovLab)/GTEx_lung/GTEx_sample_attributes_and_subject_lung.tsv"))
+# attribute <- "AGE"
+# sample_column <-"SAMPID"
+# PATH <- "/Volumes/martyomov/Active/IndividualBackUps/aladyevae/deconvolution/data/results/GTEX_LUNGS_TPM_HK_CC_F_LIMITX_OMEGA_MAD_1_KNN_Rand_new/09_2022"
+# DT <- "20221007_220240"
+# cell_types <- 14
+# plotPhenodata(PATH,DT,cell_types, phenodata, attribute)
