@@ -122,7 +122,8 @@ knitr::kable(as.data.frame(fread(snakemake@input[[1]],sep="\t")))
   
   for (ct in 1:cell_types) {
     row_name <- paste0("Cell_type_",ct)
-    genes <- (basis_ %>% arrange(desc(.data[[row_name]])))[1:top_genes,"gene"]
+    fc_col_name <- paste0("FC_", row_name)
+    genes <- (basis_ %>% arrange(desc(.data[[fc_col_name]])))[1:top_genes,"gene"]
     genesList[row_name,"genes"] <- paste0(genes,collapse = " ")
   }
   knitr::kable(genesList)
