@@ -55,11 +55,11 @@ arma::mat jump_norm(arma::mat& X, const double r_const_X = 0) {
 
 // [[Rcpp::export]]
 arma::mat correctByNorm(arma::mat& X) {
-  arma::vec norm_(X.n_cols);
-  for (int k = 0; k < X.n_cols; k++) {
-    norm_[k] = norm(X.col(k),2);
+  arma::vec norm_(X.n_rows);
+  for (int k = 0; k < X.n_rows; k++) {
+    norm_[k] = norm(X.row(k),2);
   }
-  mat B = X * diagmat(1/norm_);
+  mat B = diagmat(1/norm_) * X;
   B.elem( find_nonfinite(B) ).zeros();
   return B;
 }
@@ -270,7 +270,8 @@ field<mat> derivative_stage1(const arma::mat& X,
     der_Omega = -2 * (V__ - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
     der_Omega = der_Omega + coef_ * coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
     der_Omega.row(0).zeros();
-    der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
+    mat der_Omega_t = der_Omega.t();
+    der_Omega = correctByNorm(der_Omega_t).t() * mean_radius_Omega;
     
     new_Omega = new_Omega - coef_der_Omega * der_Omega;
     
