@@ -65,6 +65,7 @@ arma::mat correctByNorm(arma::mat& X) {
 }
 
 // [[Rcpp::export]]
+// added cosine similarity for matrix
 arma::uvec find_cosine(const arma::mat& X, const double thresh=0.85) {
   arma::mat Y = arma::trans(X) * X;
   arma::mat res = Y / (arma::sqrt(arma::diagvec(Y)) * arma::trans(arma::sqrt(arma::diagvec(Y))));
