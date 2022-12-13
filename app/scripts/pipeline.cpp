@@ -66,13 +66,12 @@ arma::mat correctByNorm(arma::mat& X) {
 
 // [[Rcpp::export]]
 // added cosine similarity for matrix
-arma::uvec find_cosine(const arma::mat& X, const double thresh=0.85) {
+arma::rowvec find_cosine(const arma::mat& X) {
   arma::mat Y = arma::trans(X) * X;
   arma::mat res = Y / (arma::sqrt(arma::diagvec(Y)) * arma::trans(arma::sqrt(arma::diagvec(Y))));
   res.diag(0).fill(0);
   arma::rowvec X_dist = max(res,0);
-  arma::uvec A = find(X_dist >= thresh);
-  return A;
+  return X_dist;
 }
 
 arma::vec nnls_col(const mat &A, const subview_col<double> &b, int max_iter = 500, double tol = 1e-6, bool verbose = false)
@@ -232,7 +231,8 @@ field<mat> derivative_stage2(const arma::mat& X,
                              const double mean_radius_X,
                              const double mean_radius_Omega,
                              const double r_const_X=0,
-                             const double r_const_Omega=0) {
+                             const double r_const_Omega=0,
+                             const double thresh=0.8) {
   arma::mat new_X = X;
   arma::mat new_Omega = Omega;
   arma::mat new_D_w = D_w;
@@ -256,8 +256,7 @@ field<mat> derivative_stage2(const arma::mat& X,
     der_X = correctByNorm(der_X) * mean_radius_X;
     
     arma::mat tmp_X = (new_X - coef_der_X * der_X).t();
-    
-    arma::uvec idx = find_cosine(tmp_X);
+    arma::uvec idx = find(find_cosine(tmp_X) >= thresh);
     
     der_X.rows(idx).zeros();
     
@@ -294,7 +293,7 @@ field<mat> derivative_stage2(const arma::mat& X,
     
     arma::mat tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
     
-    arma::uvec idx2 = find_cosine(tmp_Omega);
+    arma::uvec idx2 = find(find_cosine(tmp_Omega) >= thresh);
     
     der_Omega.cols(idx2).zeros();
     
