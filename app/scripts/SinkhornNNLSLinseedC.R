@@ -954,8 +954,8 @@ SinkhornNNLSLinseed <- R6Class(
       self$count_neg_props <- sum(self$full_proportions < -1e-10)
       
       self$full_proportions[self$full_proportions < 0] <- 0
-      self$full_proportions <- t(t(self$full_proportions) / rowSums(t(self$full_proportions)+1e-10))
-      self$full_proportions[is.na(self$full_proportions)] <- 0
+      self$full_proportions <- t(t(self$full_proportions) / (rowSums(t(self$full_proportions))+1e-10))
+      self$full_proportions[is.nan(self$full_proportions)] <- 0
       
       
       self$W_ <- t(self$S) %*% self$Omega
@@ -964,8 +964,8 @@ SinkhornNNLSLinseed <- R6Class(
       
       self$orig_full_basis <- self$full_basis
       self$full_basis[self$full_basis < 0] <- 0
-      self$full_basis <- self$full_basis / rowSums(self$full_basis+1e-10)
-      self$full_basis[is.na(self$full_basis)] <- 0
+      self$full_basis <- self$full_basis / (rowSums(self$full_basis)+1e-10)
+      self$full_basis[is.nan(self$full_basis)] <- 0
       
     },
     
