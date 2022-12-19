@@ -74,6 +74,22 @@ arma::rowvec find_cosine(const arma::mat& X) {
   return X_dist;
 }
 
+// [[Rcpp::export]]
+arma::uvec update_idx(const arma::mat& prev_X,const arma::mat& new_X, const double thresh=0.8) {
+  arma::rowvec prev_values = find_cosine(prev_X);
+  arma::rowvec new_values = find_cosine(new_X);
+  arma::uvec idx2 = find(new_values >= thresh);
+  arma::uvec new_idx = {};
+  for (int i=0;i<idx2.n_elem;i++){
+    if (new_values.at(idx2[i])>=prev_values.at(idx2[i])) {
+      int sz = new_idx.size();
+      new_idx.resize(sz+1);
+      new_idx(sz) = idx2[i];
+    }
+  }
+  return new_idx;
+}
+
 arma::vec nnls_col(const mat &A, const subview_col<double> &b, int max_iter = 500, double tol = 1e-6, bool verbose = false)
 {
   
@@ -256,9 +272,11 @@ field<mat> derivative_stage2(const arma::mat& X,
     der_X = correctByNorm(der_X) * mean_radius_X;
     
     arma::mat tmp_X = (new_X - coef_der_X * der_X).t();
-    arma::uvec idx = find(find_cosine(tmp_X) >= thresh);
+    arma::uvec idx = update_idx(tmp_X,new_X,thresh);
     
-    der_X.rows(idx).zeros();
+    if (idx.n_elem > 0) {
+      der_X.rows(idx).zeros();
+    }
     
     new_X = new_X - coef_der_X * der_X;
     
@@ -292,10 +310,11 @@ field<mat> derivative_stage2(const arma::mat& X,
     der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
     
     arma::mat tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
+    arma::uvec idx2 = update_idx(tmp_Omega,new_Omega,thresh);
     
-    arma::uvec idx2 = find(find_cosine(tmp_Omega) >= thresh);
-    
-    der_Omega.cols(idx2).zeros();
+    if (idx2.n_elem > 0) {
+      der_Omega.cols(idx2).zeros();
+    }
     
     new_Omega = new_Omega - coef_der_Omega * der_Omega;
 
