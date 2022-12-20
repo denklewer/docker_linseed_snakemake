@@ -272,7 +272,8 @@ field<mat> derivative_stage2(const arma::mat& X,
     der_X = correctByNorm(der_X) * mean_radius_X;
     
     arma::mat tmp_X = (new_X - coef_der_X * der_X).t();
-    arma::uvec idx = update_idx(tmp_X,new_X,thresh);
+    arma::mat tmp_X_2 = (new_X).t();
+    arma::uvec idx = update_idx(tmp_X,tmp_X_2,thresh);
     
     if (idx.n_elem > 0) {
       der_X.rows(idx).zeros();
