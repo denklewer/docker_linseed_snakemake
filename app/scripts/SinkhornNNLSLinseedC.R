@@ -860,14 +860,15 @@ SinkhornNNLSLinseed <- R6Class(
       iterations = self$global_iterations,
       startWithInit = F,
       limit_X = 0,
-      limit_Omega = 0
+      limit_Omega = 0,
+      cosine_thresh = 0
     ) {
 
       R_limit_X <- 0
       R_limit_Omega <- 0
       
       if (is.null(self$X) | startWithInit) {
-        self$blocks_statistics <- data.frame(matrix(0,nrow=0,ncol=10))
+        self$blocks_statistics <- data.frame(matrix(0,nrow=0,ncol=13))
         self$errors_statistics <- NULL
         self$points_statistics_X <- NULL
         self$points_statistics_Omega <- NULL
@@ -915,14 +916,15 @@ SinkhornNNLSLinseed <- R6Class(
                                       c(block_name, from_idx, from_idx+iterations-1,
                                         coef_der_X, coef_der_Omega, coef_hinge_H,
                                         coef_hinge_W, coef_pos_D_h, coef_pos_D_w,
-                                        iterations,limit_X,limit_Omega))
+                                        iterations,limit_X,limit_Omega,cosine_thresh))
       
       colnames(self$blocks_statistics) <- c("block_name",
                                             "from", "to",
                                             "coef_der_X", "coef_der_Omega", 
                                             "coef_hinge_H", "coef_hinge_W", 
                                             "coef_pos_D_h", "coef_pos_D_w",
-                                            "iterations", "limit_X", "limit_Omega")
+                                            "iterations", "limit_X", "limit_Omega",
+                                            "cosine_thresh")
       
       res_ <- derivative_stage2(self$X, self$Omega, self$D_w,
                                self$V_row, self$R, self$S,
@@ -932,7 +934,7 @@ SinkhornNNLSLinseed <- R6Class(
                                iterations, step_errors_statistics, 0,
                                step_points_statistics_X, step_points_statistics_Omega,
                                self$mean_radius_X, self$mean_radius_Omega,
-                               R_limit_X, R_limit_Omega)
+                               R_limit_X, R_limit_Omega,cosine_thresh)
       
       self$X <- res_[[1]]
       self$Omega <- res_[[2]]

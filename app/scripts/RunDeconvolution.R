@@ -50,11 +50,15 @@ for (idx in 1:nrow(blocks_pipeline)){
     x <- blocks_pipeline[idx,]
     x_limit <- 0
     omega_limit <- 0
+    cosine_thresh <- 0
     if ("x_limit" %in% names(x)) {
       x_limit <- as.numeric(x["x_limit"])
     }
     if ("omega_limit" %in% names(x)) {
       omega_limit <- as.numeric(x["omega_limit"])
+    }
+    if ("cosine_thresh" %in% names(x)) {
+      cosine_thresh <- as.numeric(x["cosine_thresh"])
     }
     tmp_snk$runGradientBlock(block_name=x[["block_name"]],
                              coef_der_X = as.numeric(x["coef_der_X"]),
@@ -65,7 +69,8 @@ for (idx in 1:nrow(blocks_pipeline)){
                              coef_pos_D_w = as.numeric(x["coef_pos_D_w"]),
                              iterations = as.numeric(x["iterations"]),
                              limit_X = x_limit,
-                             limit_Omega = omega_limit)
+                             limit_Omega = omega_limit,
+                             cosine_thresh = cosine_thresh)
 }
 
 saveResults(tmp_snk,list(meta_path=snakemake@output[["meta"]],
