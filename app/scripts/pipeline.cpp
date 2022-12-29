@@ -286,7 +286,6 @@ field<mat> derivative_stage2(const arma::mat& X,
     
     if (r_const_X > 0) {
       jump_X = jump_norm(new_X,r_const_X);
-      //has_jump_X = any(jump_X != 1);
       new_X = new_X % jump_X;
     }
     
