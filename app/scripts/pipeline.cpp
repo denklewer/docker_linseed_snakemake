@@ -117,8 +117,8 @@ arma::vec nnls_col(const mat &A, const subview_col<double> &b, int max_iter = 50
   return x;
 }
 
-
-arma::mat nnls(mat A, mat b, int max_iter = 500, double tol = 1e-6)
+// [[Rcpp::export]]
+arma::mat nnls_C__(mat A, mat b, int max_iter = 500, double tol = 1e-6)
 {
   // solving Ax = b, where x and b are both matrices
   if(A.n_rows != b.n_rows)
@@ -131,7 +131,7 @@ arma::mat nnls(mat A, mat b, int max_iter = 500, double tol = 1e-6)
 }
 
 
-
+// [[Rcpp::export]]
 arma::mat hinge_der_proportions_C__(const arma::mat& H,
                                     const arma::mat& R, double precision_ = 1e-10) {
   int m = H.n_rows;
@@ -152,7 +152,7 @@ arma::mat hinge_der_proportions_C__(const arma::mat& H,
   return reshape(arma::sum(TMP,0),m,m).t();
   
 }
-
+// [[Rcpp::export]]
 arma::mat hinge_der_basis_C__(const arma::mat& W,
                               const arma::mat& S, 
                               double precision_ = 1e-10) {
@@ -170,7 +170,7 @@ arma::mat hinge_der_basis_C__(const arma::mat& W,
   return res;
   
 }
-
+// [[Rcpp::export]]
 double hinge_C__(const arma::mat& X) {
   arma::mat X_(X.n_rows,X.n_cols,fill::zeros);
   double elem_ = 0;
@@ -185,7 +185,7 @@ double hinge_C__(const arma::mat& X) {
   }
   return accu(X_);
 }
-
+// [[Rcpp::export]]
 List calcErrors(const arma::mat& X,
                 const arma::mat& Omega,
                 const arma::mat& D_w,
@@ -297,7 +297,7 @@ field<mat> derivative_stage2(const arma::mat& X,
     arma::mat A = join_cols((M/N) * vec_mtx, coef_pos_D_h * new_X.t());
     
     
-    new_D_h = nnls(A, C);
+    new_D_h = nnls_C__(A, C);
     //new_D_h.elem(find(new_D_h <= 0)).fill(1e-09);
     double sum_D_H = accu(new_D_h);
     double change_D_H = sum_D_H * 0.005;
@@ -309,7 +309,7 @@ field<mat> derivative_stage2(const arma::mat& X,
     // derivative Omega
     der_Omega = -2 * (V__ - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
     der_Omega += coef_hinge_W * hinge_der_basis_C__(S.t() * new_Omega, S);
-    der_Omega += coef_pos_D_w * 2 * (new_Omega*new_D_w-arma::sum(S,1)) * D_w.t();
+    der_Omega += coef_pos_D_w * 2 * (new_Omega*new_D_w-arma::sum(S,1)) * new_D_w.t();
     der_Omega.row(0).zeros();
     der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
     
@@ -343,7 +343,7 @@ field<mat> derivative_stage2(const arma::mat& X,
     A = join_cols(vec_mtx, coef_pos_D_w * new_Omega);
     
     
-    new_D_w = nnls(A, B);
+    new_D_w = nnls_C__(A, B);
     //new_D_w.elem(find(new_D_w <= 0)).fill(1e-09);
     double sum_D_W = accu(new_D_w);
     double change_D_W = sum_D_W * 0.005;
