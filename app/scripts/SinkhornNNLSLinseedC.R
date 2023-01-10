@@ -526,9 +526,10 @@ SinkhornNNLSLinseed <- R6Class(
       self$S <- t(svd_$u[,1:k])
       self$R <- t(svd_$v[,1:k])
       self$Sigma <- diag(svd_$d[1:k])
-      self$S[1,] <- -self$S[1,]
-      self$R[1,] <- -self$R[1,]
-
+      if (all(self$R[1,]<0)) {
+        self$S[1,] <- -self$S[1,]  
+        self$R[1,] <- -self$R[1,]
+      }
       self$A <- matrix(apply(self$R,1,sum),ncol=1,nrow=self$cell_types)
       self$new_points <- self$V_row %*% t(self$R)
 
@@ -608,7 +609,40 @@ SinkhornNNLSLinseed <- R6Class(
       self$init_Omega <- V__ %*% ginv(diag(self$init_D_w[,1]) %*% self$init_X)
 
     },
-
+    
+    selectInitXConvex = function(r_tilda=0.9, allow_reverse=T){
+      limit_num_ <- floor(nrow(self$V_row)*r_tilda)
+      self$init_X <- diag(apply(self$new_points[,-1],2,function(x){
+        sort(x)[limit_num_]
+      }))
+      self$init_X <- cbind(1/sqrt(self$N),
+                              rbind(self$init_X,
+                                    -1/(self$cell_types-1) * apply(self$init_X,1,sum)))
+      
+      self$init_D_h <- ginv(t(self$init_X)) %*% self$A
+      self$init_D_w <- self$init_D_h * (self$M/self$N)
+      ## Omega
+      V__ <- self$S %*% self$V_row %*% t(self$R)
+      self$init_Omega <- V__ %*% ginv(diag(self$init_D_w[,1]) %*% self$init_X)
+    },
+    
+    selectInitOmegaConvex = function(){
+      limit_num_ <- floor(ncol(self$V_row)*r_tilda)
+      self$init_Omega <- diag(apply(self$new_samples_points[,-1],2,function(x){
+        sort(x)[limit_num_]
+      }))
+      self$init_Omega <- t(cbind(1/sqrt(self$M),
+                                    rbind(self$init_Omega,
+                                          -1/(self$cell_types-1) * apply(self$init_Omega,1,sum))))
+      
+      ## D
+      self$init_D_w <- ginv(self$init_Omega) %*% self$B
+      self$init_D_h <- self$init_D_w * (self$N/self$M)
+      ## X
+      V__ <- self$S %*% self$V_row %*% t(self$R)
+      self$init_X <- ginv(self$init_Omega %*% diag(self$init_D_w[,1])) %*% V__
+    },
+    
     selectInitXSubset = function(thresh=2000) {
       N <- max(length(self$zero_distance_genes),thresh)
       genes_subset <- names(self$zero_distance_genes[(N-thresh):N])

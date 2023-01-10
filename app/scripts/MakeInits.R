@@ -49,6 +49,17 @@ if (init_strategy == "SelectX") {
   }
 }
 
+if (init_strategy == "SelectXConvex") {
+  for (idx in 1:snakemake@config[["num_inits"]]) {
+    tmp_snk$selectInitXConvex()
+    saveRDS(list(init_Omega=tmp_snk$init_Omega,
+                 init_X=tmp_snk$init_X,
+                 init_D_w= tmp_snk$init_D_w,
+                 init_D_h = tmp_snk$init_D_h),
+            snakemake@output[[idx]])
+  }
+}
+
 if (init_strategy == "SelectXSubset") {
   thresh = 2000
   if ("thresh" %in% names(snakemake@config)) {
@@ -72,6 +83,17 @@ if (init_strategy == "SelectOmega") {
                  init_D_w= tmp_snk$init_D_w,
                  init_D_h = tmp_snk$init_D_h),
                  snakemake@output[[idx]])
+  }
+}
+
+if (init_strategy == "SelectOmegaConvex") {
+  for (idx in 1:snakemake@config[["num_inits"]]) {
+    tmp_snk$selectInitOmegaConvex()
+    saveRDS(list(init_Omega=tmp_snk$init_Omega,
+                 init_X=tmp_snk$init_X,
+                 init_D_w= tmp_snk$init_D_w,
+                 init_D_h = tmp_snk$init_D_h),
+            snakemake@output[[idx]])
   }
 }
 
