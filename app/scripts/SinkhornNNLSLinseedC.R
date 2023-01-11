@@ -610,7 +610,7 @@ SinkhornNNLSLinseed <- R6Class(
 
     },
     
-    selectInitXConvex = function(r_tilda=0.9, allow_reverse=T){
+    selectInitXConvex = function(r_tilda=0.6){
       limit_num_ <- floor(nrow(self$V_row)*r_tilda)
       self$init_X <- diag(apply(self$new_points[,-1],2,function(x){
         sort(x)[limit_num_]
@@ -626,7 +626,7 @@ SinkhornNNLSLinseed <- R6Class(
       self$init_Omega <- V__ %*% ginv(diag(self$init_D_w[,1]) %*% self$init_X)
     },
     
-    selectInitOmegaConvex = function(){
+    selectInitOmegaConvex = function(r_tilda=0.6){
       limit_num_ <- floor(ncol(self$V_row)*r_tilda)
       self$init_Omega <- diag(apply(self$new_samples_points[,-1],2,function(x){
         sort(x)[limit_num_]
