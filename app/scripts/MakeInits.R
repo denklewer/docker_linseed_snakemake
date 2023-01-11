@@ -35,8 +35,8 @@ if (is.null(init_strategy)){
 }
 print(init_strategy)
 if (! init_strategy %in% c("SelectX","SelectOmega","SelectRandom",
-"SelectCentered","SelectXSubset","SelectOmegaSubset"))
-  stop("Selected initialization is not allowed. Available values 'SelectX','SelectOmega','SelectRandom','SelectCentered','SelectXSubset','SelectOmegaSubset'")
+"SelectCentered","SelectXSubset","SelectOmegaSubset","SelectXConvex","SelectOmegaConvex"))
+  stop("Selected initialization is not allowed. Available values 'SelectX','SelectOmega','SelectRandom','SelectCentered','SelectXSubset','SelectOmegaSubset','SelectXConvex','SelectOmegaConvex'")
 
 if (init_strategy == "SelectX") {
   for (idx in 1:snakemake@config[["num_inits"]]) {
