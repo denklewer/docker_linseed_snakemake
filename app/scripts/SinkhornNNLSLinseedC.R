@@ -612,9 +612,11 @@ SinkhornNNLSLinseed <- R6Class(
     
     selectInitXConvex = function(r_tilda=0.95){
       limit_num_ <- floor(nrow(self$V_row)*r_tilda)
+      print(limit_num_)
       self$init_X <- diag(apply(self$new_points[,-1],2,function(x){
         sort(x)[limit_num_]
       }))
+      print(t(self$init_X))
       self$init_X <- cbind(1/sqrt(self$N),
                               rbind(self$init_X,
                                     -1/(self$cell_types-1) * apply(self$init_X,1,sum)))
