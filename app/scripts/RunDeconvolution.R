@@ -15,16 +15,15 @@ saveResults <- function(obj_,paths_){
       colnames(obj_$full_basis) <- paste0("Cell_type_",1:obj_$cell_types)
       toSave <- obj_$full_basis
       toSave <- obj_$getFoldChange(toSave)
-      print(SinkhornNNLSLinseed$public_methods$getLimmaFoldChange)
       #toSave <- obj_$getLimmaFoldChange(toSave)
       toSave <- rbind(c(rep(NA,obj_$cell_types),round(apply(obj_$full_proportions,1,mean),4)),toSave)
       rownames(toSave) <- c("avg_proportions",rownames(obj_$filtered_dataset))
       write.table(toSave,file=paths_[["basis_r_path"]],
                   sep="\t",col.names = NA, row.names = T, quote = F)
     ## save basis column normalized
-      toSave <- t(t(obj_$full_basis) / (rowSums(t(obj_$full_basis))+1e-10))
-      toSave <- toSave[is.nan(toSave)] <- 0
+      toSave <- t(t(obj_$full_basis) / (rowSums(t(obj_$full_basis))+1e-10)) 
       toSave <- obj_$getFoldChange(toSave)
+      toSave <- toSave[is.nan(toSave)] <- 0
       #toSave <- obj_$getLimmaFoldChange(toSave)
       toSave <- rbind(c(rep(NA,obj_$cell_types),round(apply(obj_$full_proportions,1,mean),4)),toSave)
       rownames(toSave) <- c("avg_proportions",rownames(obj_$filtered_dataset))
