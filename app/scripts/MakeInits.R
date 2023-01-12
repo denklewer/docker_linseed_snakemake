@@ -50,8 +50,13 @@ if (init_strategy == "SelectX") {
 }
 
 if (init_strategy == "SelectXConvex") {
+  r_tilda = 0.95
+    if ("r_tilda" %in% names(snakemake@config)) {
+      r_tilda = snakemake@config[["thresh"]]
+    }
   for (idx in 1:snakemake@config[["num_inits"]]) {
-    tmp_snk$selectInitXConvex()
+    
+    tmp_snk$selectInitXConvex(r_tilda)
     saveRDS(list(init_Omega=tmp_snk$init_Omega,
                  init_X=tmp_snk$init_X,
                  init_D_w= tmp_snk$init_D_w,
@@ -87,8 +92,12 @@ if (init_strategy == "SelectOmega") {
 }
 
 if (init_strategy == "SelectOmegaConvex") {
+  r_tilda = 0.95
+    if ("r_tilda" %in% names(snakemake@config)) {
+      r_tilda = snakemake@config[["thresh"]]
+    }
   for (idx in 1:snakemake@config[["num_inits"]]) {
-    tmp_snk$selectInitOmegaConvex()
+    tmp_snk$selectInitOmegaConvex(r_tilda)
     saveRDS(list(init_Omega=tmp_snk$init_Omega,
                  init_X=tmp_snk$init_X,
                  init_D_w= tmp_snk$init_D_w,
