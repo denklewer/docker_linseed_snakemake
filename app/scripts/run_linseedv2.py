@@ -50,6 +50,7 @@ parser.add_option("--max_mad", type=float)
 parser.add_option("--min_median", type=float)
 parser.add_option("--max_median", type=float)
 parser.add_option("--thresh", type=int)
+parser.add_option("--r_tilda", type=int)
 parser.add_option("--filter_genes", type=int, default=0)
 parser.add_option("--filter_samples", type=int, default=0)
 parser.add_option("--thresh_genes", type=float, default=0)
@@ -122,6 +123,8 @@ with open(os.path.join(options.reports_path,"{0}.html".format(DT_STAMP)),"w+") a
             config_dict['max_median']=options.max_median
         if not options.thresh is None:
             config_dict['thresh']=options.thresh
+        if not options.r_tilda is None:
+            config_dict['r_tilda']=options.r_tilda
         config_dict['filter_genes']=options.filter_genes
         config_dict['filter_samples']=options.filter_samples
         config_dict['thresh_genes']=options.thresh_genes
