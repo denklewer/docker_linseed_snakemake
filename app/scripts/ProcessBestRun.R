@@ -86,15 +86,15 @@ for (f in snakemake@input[['points']]) {
 }
 
 png(snakemake@output[['UMAP']])
-plotUMAP(t(all_basis),df$analysis_name)
+plotCosineUMAP(all_basis,df$analysis_name)
 dev.off()
 
 png(snakemake@output[['UMAP_projX']])
-plotUMAP(all_X,df$analysis_name)
+plotCosineUMAP(t(all_X),df$analysis_name)
 dev.off()
 
 png(snakemake@output[['UMAP_projOmega']])
-plotUMAP(all_Omega,df$analysis_name)
+plotCosineUMAP(t(all_Omega),df$analysis_name)
 dev.off()
 
 png(snakemake@output[[13]])
@@ -120,4 +120,12 @@ proportions <- fread(file.path("results",snakemake@params[["run_id"]],"props",pa
 
 png(snakemake@output[[18]])
 plotProportionsDistance(metadata_,proportions)
+dev.off()
+
+png(snakemake@output[[19]])
+plotCosineHeatmap(metadata_$final_X)
+dev.off()
+
+png(snakemake@output[[20]])
+plotCosineHeatmap(metadata_$final_Omega)
 dev.off()
