@@ -155,7 +155,7 @@ rule select_best:
         "results/{run_id}/best/cosine_props.png",
         UMAP = "results/{run_id}/plots/UMAP.png",
         UMAP_projX = "results/{run_id}/plots/UMAP_projected_X.png",
-        UMAP_projOmega = "results/{run_id}/plots/UMAP_projected_Omega.png",
+        UMAP_projOmega = "results/{run_id}/plots/UMAP_projected_Omega.png"
         
 
     script: 
