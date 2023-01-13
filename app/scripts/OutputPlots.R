@@ -4,6 +4,7 @@ library(gridExtra)
 library(uwot)
 library(ggpubr)
 library(ggrepel)
+library(lsa)
 
 loadRData <- function(fileName){
   #loads an R file, and returns it
