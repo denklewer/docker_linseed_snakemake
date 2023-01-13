@@ -9,3 +9,4 @@ dependencies:
   - pandas=1.4.2
   - ipython=8.3.0
   - pandoc=2.18
+  - tabulate=0.8.10
