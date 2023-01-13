@@ -4,6 +4,7 @@ RUN R -e "install.packages('rmarkdown')"
 RUN R -e "install.packages('uwot')"
 RUN R -e "install.packages('ggpubr')"
 RUN R -e "install.packages('dbscan')"
+RUN R -e "install.packages('lsa')"
 
 RUN  apt-get update \
   && apt-get install -y wget \
