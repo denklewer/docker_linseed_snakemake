@@ -232,9 +232,11 @@ plotProportionsDistance <- function(data_,proportions) {
 }
 
 plotCosineHeatmap <- function(data_){
-  data_[is.nan(data_)] <- 0
+  
   rownames(data_) <- as.character(1:nrow(data_))
   colnames(data_) <- as.character(1:ncol(data_))
-  pheatmap::pheatmap(round(cosine(data_),2),scale="none",cluster_cols = F, cluster_rows = F, display_numbers = T,
+  toPlot <- round(cosine(data_),2)
+  toPlot[is.nan(toPlot)] <- 0
+  pheatmap::pheatmap(toPlot,scale="none",cluster_cols = F, cluster_rows = F, display_numbers = T,
                     show_rownames = T,show_colnames = T)
 }
