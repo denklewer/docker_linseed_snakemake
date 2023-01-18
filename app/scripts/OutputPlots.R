@@ -236,7 +236,7 @@ plotCosineHeatmap <- function(data_){
   rownames(data_) <- as.character(1:nrow(data_))
   colnames(data_) <- as.character(1:ncol(data_))
   toPlot <- round(cosine(data_),2)
-  toPlot[is.nan(toPlot)] <- 0
+  toPlot[is.na(toPlot)] <- 0
   print(toPlot)
   pheatmap::pheatmap(toPlot,scale="none",cluster_cols = F, cluster_rows = F, display_numbers = T,
                     show_rownames = T,show_colnames = T)
