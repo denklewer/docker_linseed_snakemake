@@ -297,11 +297,6 @@ field<mat> derivative_stage2(const arma::mat& X,
     
     
     new_D_h = nnls_C__(A, C);
-    // double sum_D_H = accu(new_D_h);
-    // double change_D_H = sum_D_H * 0.005;
-    // new_D_h.elem(find(new_D_h <= 0)).fill(change_D_H);
-    // new_D_h = new_D_h / accu(new_D_h) * sum_D_H;
-    
     new_D_w = new_D_h * (M/N);
     
     // derivative Omega
@@ -342,10 +337,6 @@ field<mat> derivative_stage2(const arma::mat& X,
     
     
     new_D_w = nnls_C__(A, B);
-    // double sum_D_W = accu(new_D_w);
-    // double change_D_W = sum_D_W * 0.005;
-    // new_D_w.elem(find(new_D_w <= 0)).fill(change_D_W);
-    // new_D_w = new_D_w / accu(new_D_w) * sum_D_W;
     
     new_D_h = new_D_w * (N/M);
     
