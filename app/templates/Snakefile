@@ -151,8 +151,8 @@ rule select_best:
         "results/{run_id}/best/dist_basis.png",
         "results/{run_id}/best/distance_basis.png",
         "results/{run_id}/best/distance_props.png",
-        "results/{run_id}/best/cosine_basis.png",
         "results/{run_id}/best/cosine_props.png",
+        "results/{run_id}/best/cosine_basis.png",
         UMAP = "results/{run_id}/plots/UMAP.png",
         UMAP_projX = "results/{run_id}/plots/UMAP_projected_X.png",
         UMAP_projOmega = "results/{run_id}/plots/UMAP_projected_Omega.png"
@@ -180,8 +180,8 @@ rule prepare_report:
                 "results/{run_id}/best/dist_basis.png",
                 "results/{run_id}/best/distance_basis.png",
                 "results/{run_id}/best/distance_props.png",
-                "results/{run_id}/best/cosine_basis.png",
-                "results/{run_id}/best/cosine_props.png"],
+                "results/{run_id}/best/cosine_props.png",
+                "results/{run_id}/best/cosine_basis.png"],
                 run_id=DT_STAMP)
     params:
         run_id = DT_STAMP

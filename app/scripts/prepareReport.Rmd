@@ -134,9 +134,9 @@ knitr::kable(as.data.frame(fread(snakemake@input[[1]],sep="\t")))
 <h3>Proportions zero distance</h3>
 <img src="`r base64enc::dataURI(file = snakemake@input[[16]], mime = 'image/png', encoding = 'base64')`"></img>
 
-<h3>Cosine similarity (basis)</h3>
-<img src="`r base64enc::dataURI(file = snakemake@input[[17]], mime = 'image/png', encoding = 'base64')`"></img>
 <h3>Cosine similarity (proportions)</h3>
+<img src="`r base64enc::dataURI(file = snakemake@input[[17]], mime = 'image/png', encoding = 'base64')`"></img>
+<h3>Cosine similarity (basis)</h3>
 <img src="`r base64enc::dataURI(file = snakemake@input[[18]], mime = 'image/png', encoding = 'base64')`"></img>
 
 
