@@ -122,6 +122,7 @@ plotUMAP <- function(data_, best_run){
 
 plotCosineUMAP <- function(data_, best_run){
   data_ <- cosine(as.matrix(data_))
+  data_[is.nan(data_)] <- 0
   toPlot <- as.data.frame(umap(data_,n_neighbors=2))
   rownames(toPlot) <- rownames(data_)
   toPlot$best <- grepl(paste0("^",best_run),rownames(toPlot))
@@ -236,8 +237,7 @@ plotCosineHeatmap <- function(data_){
   rownames(data_) <- as.character(1:nrow(data_))
   colnames(data_) <- as.character(1:ncol(data_))
   toPlot <- round(cosine(data_),2)
-  toPlot[is.na(toPlot)] <- 0
-  print(toPlot)
+  toPlot[is.nan(toPlot)] <- 0
   pheatmap::pheatmap(toPlot,scale="none",cluster_cols = F, cluster_rows = F, display_numbers = T,
                     show_rownames = T,show_colnames = T)
 }
