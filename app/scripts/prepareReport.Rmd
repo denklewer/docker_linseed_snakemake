@@ -31,11 +31,15 @@ after_samples = ncol(metadata_$filtered_dataset)
 ## Parameters
 analysis_name: `r snakemake@config[['analysis_name']]`<br>
 num_inits: `r snakemake@config[['num_inits']]`<br>
+k_genes: `r snakemake@config[['k_genes']]`<br>
+k_samples: `r snakemake@config[['k_samples']]`<br>
 top_mad: `r snakemake@config[['top_mad']]`<br>
 min_mad: `r snakemake@config[['min_mad']]`<br>
 min_median: `r snakemake@config[['min_median']]`<br>
 filter_genes: `r snakemake@config[['filter_genes']]`<br>
 filter_samples: `r snakemake@config[['filter_samples']]`<br>
+thresh_genes: `r snakemake@config[['thresh_genes']]`<br>
+thresh_samples: `r snakemake@config[['thresh_samples']]`<br>
 scale_iterations: `r snakemake@config[['scale_iterations']]`<br>
 init_strategy: `r snakemake@config[['init_strategy']]`<br>
 
@@ -45,13 +49,18 @@ knitr::kable(as.data.frame(fread(snakemake@config[['blocks_pipeline']])))
 ```
 
 ## Preprocessing
+### Filters
+```{r, echo=FALSE}
+knitr::kable(as.data.frame(metadata_$filters_pipeline))
+```
+<br>
 Number of genes (before filtering, only with MAD>0): `r before_genes`<br>
 Number of samples (before filtering): `r before_samples`<br>
 
 <h3>MAD distribution</h3>
 <img src="`r base64enc::dataURI(file = 'resources/preprocess/topMAD.png', mime = 'image/png', encoding = 'base64')`"></img>
 
-```{r, asis, echo=FALSE}
+```{r, results='asis', echo=FALSE}
 if (file.exists("'resources/preprocess/mad-med.png'")) {
   cat('<h3>MAD vs Median expression</h3>')
   cat(paste0('<img src="',base64enc::dataURI(file = 'resources/preprocess/mad-med.png', mime = 'image/png', encoding = 'base64'),'"></img>'))
@@ -60,12 +69,23 @@ if (file.exists("'resources/preprocess/mad-med.png'")) {
 
 <h3>SVD (before filtering)</h3>
 <img src="`r base64enc::dataURI(file = 'resources/preprocess/svdBefore.png', mime = 'image/png', encoding = 'base64')`"></img>
-<h3>Distances (before filtering)</h3>
-<img src="`r base64enc::dataURI(file = 'resources/preprocess/distancesBefore.png', mime = 'image/png', encoding = 'base64')`"></img>
-<h3>SVD (after filtering)</h3>
+
+```{r, results='asis', echo=FALSE}
+if (file.exists("'resources/preprocess/distancesBefore.png'")) {
+  cat('<h3>Distances</h3>')
+  cat(paste0('<img src="',base64enc::dataURI(file = 'resources/preprocess/distancesBefore.png', mime = 'image/png', encoding = 'base64'),'"></img>'))
+}
+```
+
+<h3>SVD (after distance filtering)</h3>
 <img src="`r base64enc::dataURI(file = 'resources/preprocess/svdAfter.png', mime = 'image/png', encoding = 'base64')`"></img>
-<h3>Distances (after filtering)</h3>
-<img src="`r base64enc::dataURI(file = 'resources/preprocess/distancesAfter.png', mime = 'image/png', encoding = 'base64')`"></img>
+
+```{r, asis, echo=FALSE}
+if (file.exists("'resources/preprocess/distancesAfter.png'")) {
+  cat('<h3>Distances (after distance filtering)</h3>')
+  cat(paste0('<img src="',base64enc::dataURI(file = 'resources/preprocess/distancesAfter.png', mime = 'image/png', encoding = 'base64'),'"></img>'))
+}
+```
 
 Number of genes (after filtering): `r after_genes`<br>
 Number of samples (after filtering): `r after_samples`<br>
@@ -109,7 +129,8 @@ knitr::kable(as.data.frame(fread(snakemake@input[[1]],sep="\t")))
   
   for (ct in 1:cell_types) {
     row_name <- paste0("Cell_type_",ct)
-    genes <- (basis_ %>% arrange(desc(.data[[row_name]])))[1:top_genes,"gene"]
+    fc_col_name <- paste0("FC_", row_name)
+    genes <- (basis_ %>% arrange(desc(.data[[fc_col_name]])))[1:top_genes,"gene"]
     genesList[row_name,"genes"] <- paste0(genes,collapse = " ")
   }
   knitr::kable(genesList)
@@ -119,6 +140,11 @@ knitr::kable(as.data.frame(fread(snakemake@input[[1]],sep="\t")))
 <img src="`r base64enc::dataURI(file = snakemake@input[[15]], mime = 'image/png', encoding = 'base64')`"></img>
 <h3>Proportions zero distance</h3>
 <img src="`r base64enc::dataURI(file = snakemake@input[[16]], mime = 'image/png', encoding = 'base64')`"></img>
+
+<h3>Cosine similarity (proportions)</h3>
+<img src="`r base64enc::dataURI(file = snakemake@input[[17]], mime = 'image/png', encoding = 'base64')`"></img>
+<h3>Cosine similarity (basis)</h3>
+<img src="`r base64enc::dataURI(file = snakemake@input[[18]], mime = 'image/png', encoding = 'base64')`"></img>
 
 
 <a href="`r base64enc::dataURI(file = snakemake@input[[7]], mime = 'text', encoding = 'base64')`">Download proportions</a><br>

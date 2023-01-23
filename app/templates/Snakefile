@@ -28,12 +28,9 @@ rule apply_filters:
     output:
         dataset = "resources/preprocess/dataset.rds",
         top_mad = "resources/preprocess/topMAD.png",
-        distance_before = "resources/preprocess/distancesBefore.png",
-        distance_after = "resources/preprocess/distancesAfter.png",
         svd_before = "resources/preprocess/svdBefore.png",
         svd_before_plot = "resources/preprocess/svdBeforeToPlot.rds",
-        svd_after = "resources/preprocess/svdAfter.png",
-	    metadata = "resources/preprocess/dataset.txt"
+        svd_after = "resources/preprocess/svdAfter.png"
     params:
         dataset = f"resources/datasets/{config['dataset']}.rds",
         top_mad_joined = "resources/preprocess/topMAD_joined.png",
@@ -149,9 +146,12 @@ rule select_best:
         "results/{run_id}/best/dist_basis.png",
         "results/{run_id}/best/distance_basis.png",
         "results/{run_id}/best/distance_props.png",
+        "results/{run_id}/best/cosine_props.png",
+        "results/{run_id}/best/cosine_basis.png",
         UMAP = "results/{run_id}/plots/UMAP.png",
         UMAP_projX = "results/{run_id}/plots/UMAP_projected_X.png",
         UMAP_projOmega = "results/{run_id}/plots/UMAP_projected_Omega.png"
+        
 
     script: 
         "/app/scripts/ProcessBestRun.R"
@@ -174,7 +174,9 @@ rule prepare_report:
                 "results/{run_id}/best/dist_proportions.png",
                 "results/{run_id}/best/dist_basis.png",
                 "results/{run_id}/best/distance_basis.png",
-                "results/{run_id}/best/distance_props.png"],
+                "results/{run_id}/best/distance_props.png",
+                "results/{run_id}/best/cosine_props.png",
+                "results/{run_id}/best/cosine_basis.png"],
                 run_id=DT_STAMP)
     params:
         run_id = DT_STAMP

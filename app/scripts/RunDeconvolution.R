@@ -15,14 +15,14 @@ saveResults <- function(obj_,paths_){
       colnames(obj_$full_basis) <- paste0("Cell_type_",1:obj_$cell_types)
       toSave <- obj_$full_basis
       toSave <- obj_$getFoldChange(toSave)
-      print(SinkhornNNLSLinseed$public_methods$getLimmaFoldChange)
       #toSave <- obj_$getLimmaFoldChange(toSave)
       toSave <- rbind(c(rep(NA,obj_$cell_types),round(apply(obj_$full_proportions,1,mean),4)),toSave)
       rownames(toSave) <- c("avg_proportions",rownames(obj_$filtered_dataset))
       write.table(toSave,file=paths_[["basis_r_path"]],
                   sep="\t",col.names = NA, row.names = T, quote = F)
     ## save basis column normalized
-      toSave <- t(t(obj_$full_basis) / rowSums(t(obj_$full_basis)))
+      toSave <- t(t(obj_$full_basis) / (rowSums(t(obj_$full_basis))+1e-10)) 
+      toSave[is.nan(toSave)] <- 0
       toSave <- obj_$getFoldChange(toSave)
       #toSave <- obj_$getLimmaFoldChange(toSave)
       toSave <- rbind(c(rep(NA,obj_$cell_types),round(apply(obj_$full_proportions,1,mean),4)),toSave)
@@ -50,11 +50,15 @@ for (idx in 1:nrow(blocks_pipeline)){
     x <- blocks_pipeline[idx,]
     x_limit <- 0
     omega_limit <- 0
+    cosine_thresh <- 0
     if ("x_limit" %in% names(x)) {
       x_limit <- as.numeric(x["x_limit"])
     }
     if ("omega_limit" %in% names(x)) {
       omega_limit <- as.numeric(x["omega_limit"])
+    }
+    if ("cosine_thresh" %in% names(x)) {
+      cosine_thresh <- as.numeric(x["cosine_thresh"])
     }
     tmp_snk$runGradientBlock(block_name=x[["block_name"]],
                              coef_der_X = as.numeric(x["coef_der_X"]),
@@ -64,7 +68,9 @@ for (idx in 1:nrow(blocks_pipeline)){
                              coef_pos_D_h = as.numeric(x["coef_pos_D_h"]),
                              coef_pos_D_w = as.numeric(x["coef_pos_D_w"]),
                              iterations = as.numeric(x["iterations"]),
-                             limit_X = x_limit)
+                             limit_X = x_limit,
+                             limit_Omega = omega_limit,
+                             cosine_thresh = cosine_thresh)
 }
 
 saveResults(tmp_snk,list(meta_path=snakemake@output[["meta"]],

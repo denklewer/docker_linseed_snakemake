@@ -1,0 +1,55 @@
+---
+output: 
+  html_document:
+    toc: true
+params: 
+  sc_dataset: ""
+  res_data: ""
+  res_path: ""
+  res_type: ""
+  min_ct: 0
+  max_ct: 0
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+SC_DATASET <- params$sc_dataset
+RESULTS_DIR <- params$res_data
+RESULTS_PATH <- params$res_path
+RESULTS_TYPE <- params$res_type
+min_ct <- params$min_ct
+max_ct <- params$max_ct
+```
+
+---
+title: "Cell type reference on `r SC_DATASET` for `r RESULTS_DIR`"
+---
+
+```{r , results='asis'}
+for (i in min_ct:max_ct){
+  cat(paste0("<a href='#ct_",i,"_header'>Cell types ",i,"</a><br>"))
+}
+```
+
+```{r , results='asis',attr.source="style='display:inline-block;'", collapse=TRUE}
+for (i in min_ct:max_ct){
+  cat(paste0("<h2 id='ct_",i,"_header'>Cell types ",i,"</h2>"))
+  for (type_ in c("UMAP","tSNE")) {
+    IMG_PATH <- file.path(RESULTS_PATH,paste0("ct",i),RESULTS_TYPE,SC_DATASET,type_)
+  if (length(list.files(IMG_PATH,pattern = "\\.png$"))>0) {
+    cat(paste0("<h3>",type_,"</h3>"))
+    for (file_ in list.files(IMG_PATH,pattern = "\\.png$",full.names = T)) {
+      cat("<div style='float:left; width: 33.33%; padding: 5px'>")
+    cat("<img src='",base64enc::dataURI(file = file_, mime = 'image/png', encoding = 'base64'),"' style='width:100%'>")
+    cat("</div>")  
+    }
+    cat("<hr style='clear:both;'>")
+  }  
+  }
+}
+```

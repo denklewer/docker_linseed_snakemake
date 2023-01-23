@@ -45,19 +45,26 @@ parser.add_option("--init_strategy")
 parser.add_option("--num_inits", type=int, default=5)
 parser.add_option("--top_mad", type=int)
 parser.add_option("--top_median", type=int)
-parser.add_option("--min_mad", type=int)
-parser.add_option("--max_mad", type=int)
-parser.add_option("--min_median", type=int)
-parser.add_option("--max_median", type=int)
+parser.add_option("--min_mad", type=float)
+parser.add_option("--max_mad", type=float)
+parser.add_option("--min_median", type=float)
+parser.add_option("--max_median", type=float)
 parser.add_option("--thresh", type=int)
-parser.add_option("--filter_genes", type=int, default=0)
-parser.add_option("--filter_samples", type=int, default=0)
+parser.add_option("--r_tilda", type=float)
 parser.add_option("--scale_iterations", type=int, default=20)
+parser.add_option("--no_cutoff_samples", action="store_true", dest="no_cutoff_samples")
+parser.add_option("--no_cutoff_genes", action="store_true", dest="no_cutoff_genes")
+parser.add_option("--no_filter_by_plane", action="store_true", dest="no_filter_by_plane")
 parser.add_option("--min_ct", type=int)
 parser.add_option("--max_ct", type=int)
 parser.add_option("-l", action="store_true", dest="local", default=True)
 parser.add_option("-b", action="store_false", dest="local")
 parser.add_option("--apply_filters", action="store_true", dest="apply_filters", default=False)
+parser.add_option("--docker_image", default = "dockerreg01.accounts.ad.wustl.edu/artyomov_lab/docker_linseed_snakemake")
+parser.add_option("--docker_tag", default = "cpp")
+parser.add_option("-e","--email", default = "aladyeva.e@wustl.edu")
+parser.add_option("--restarts", type=int, default = 1)
+
 
 (options, args) = parser.parse_args()
 
@@ -109,10 +116,16 @@ with open(os.path.join(options.reports_path,"{0}.html".format(DT_STAMP)),"w+") a
             config_dict['min_median']=options.min_median
         if not options.max_median is None:
             config_dict['max_median']=options.max_median
-        if not options.max_median is None:
+        if not options.thresh is None:
             config_dict['thresh']=options.thresh
-        config_dict['filter_genes']=options.filter_genes
-        config_dict['filter_samples']=options.filter_samples
+        if not options.r_tilda is None:
+            config_dict['r_tilda']=options.r_tilda
+        if options.no_cutoff_samples:
+            config_dict['cutoff_samples']=not options.no_cutoff_samples
+        if options.no_cutoff_genes:
+            config_dict['cutoff_genes']=not options.no_cutoff_genes
+        if options.no_filter_by_plane:
+            config_dict['filter_by_plane']=not options.no_filter_by_plane
         config_dict['scale_iterations']=options.scale_iterations
         config_dict['init_strategy']=options.init_strategy
         config_dict['cell_types']=ct
@@ -120,7 +133,8 @@ with open(os.path.join(options.reports_path,"{0}.html".format(DT_STAMP)),"w+") a
         config_dict['dataset']=options.dataset
         config_dict['analysis_name']="{0}_ct{1}".format(options.analysis_name,ct)
         config_dict['blocks_pipeline']="config/blocks.csv"
-        config_dict['count']={'time':6000,'mem_ram':32,'threads':8,'email':"aladyeva.e@wustl.edu",'nodes':-1,'docker':"dockerreg01.accounts.ad.wustl.edu/artyomov_lab/docker_linseed_snakemake:cpp"}
+        config_dict['count']={'time':6000,'mem_ram':32,'threads':8,'email':options.email,
+                              'nodes':-1,'docker':"{0}:{1}".format(options.docker_image,options.docker_tag)}
         with open(os.path.join(WORK_DIR,"config",'config.yaml'), 'w+') as ff:
             yaml.dump(config_dict, ff, allow_unicode=True, default_flow_style=False)
 
@@ -133,15 +147,16 @@ with open(os.path.join(options.reports_path,"{0}.html".format(DT_STAMP)),"w+") a
             print(cmd)
             p = Popen(cmd, shell=False, stdin=None, stdout=None, stderr=None, close_fds=True)
         else:
-            snk_cmd = "snakemake --profile lsf_demo --local-cores $L_CORES --jobs 50 -pr --conda-frontend conda --restart-times 1 --rerun-incomplete"
+            snk_cmd = "snakemake --profile lsf_demo --local-cores $L_CORES --jobs 50 -pr --conda-frontend conda --restart-times {0} --rerun-incomplete".format(options.restarts)
             if options.apply_filters:
                 snk_cmd += " -f apply_filters"
             cmd = """ P_WD=`pwd`; mkdir -p "$P_WD/tmp";
                 echo "__LSF_JOB_CUSTOM_TMPDIR__=$P_WD/tmp" > lsf_docker_env_file.env;
-                chmod a+r lsf_docker_env_file.env;  LSF_DOCKER_ENV_FILE=$P_WD/lsf_docker_env_file.env;
-                export SMK_DOCKER_IMG="dockerreg01.accounts.ad.wustl.edu/artyomov_lab/docker_linseed_snakemake:cpp";
-                export P_LOG=$P_WD/logs/pipeline.log;  L_CORES=4; LSF_DOCKER_ENV_FILE=$P_WD/lsf_docker_env_file.env; mkdir -p logs;
-                bsub -cwd $HOME -n $L_CORES -G compute-martyomov -q general -oo $P_LOG -R 'span[hosts=1]' -a "docker($SMK_DOCKER_IMG)" /usr/bin/script -fqe /dev/null  -c "source /etc/bash.bashrc; cd $P_WD; export TMPDIR=$P_WD/tmp; {0}" """.format(snk_cmd)
+                chmod a+r lsf_docker_env_file.env; export SMK_DOCKER_IMG="{1}:{2}";
+                export P_LOG=$P_WD/logs/pipeline.log; export L_CORES=4; export LSF_DOCKER_ENV_FILE=$P_WD/lsf_docker_env_file.env; mkdir -p logs;
+                bsub -cwd $HOME -n $L_CORES -G compute-martyomov -q general -oo $P_LOG -R 'span[hosts=1]' -a "docker($SMK_DOCKER_IMG)" /usr/bin/script -fqe /dev/null  -c "source /etc/bash.bashrc; cd $P_WD; export TMPDIR=$P_WD/tmp; export __LSF_JOB_CUSTOM_TMPDIR__=$P_WD/tmp; {0}" """.format(snk_cmd,
+                options.docker_image,
+                options.docker_tag)
             print(cmd)
             p = Popen(cmd, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
             

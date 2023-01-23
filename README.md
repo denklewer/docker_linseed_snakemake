@@ -10,9 +10,11 @@
 --snakefile_path "/app/templates/Snakefile" --num_inits 10 \
 --min_mad 2 --filter_genes 1000 --dataset "HNSC_TPM_F" --analysis_name "HNSC_TPM_F_LIMITX_MAD_2_GENES_1000_X_Sub" -b --init_strategy "SelectX"
 ```
-
+...
 ## track snakemake logs
 ```{bash}
+P_LOG="logs/pipeline.log"
 touch -f $P_LOG && tail -f $P_LOG
+
 touch -f ./logs/pipeline.log && tail -f ./logs/pipeline.log
 ```

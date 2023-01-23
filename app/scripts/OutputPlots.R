@@ -4,6 +4,7 @@ library(gridExtra)
 library(uwot)
 library(ggpubr)
 library(ggrepel)
+library(lsa)
 
 loadRData <- function(fileName){
   #loads an R file, and returns it
@@ -119,6 +120,25 @@ plotUMAP <- function(data_, best_run){
     xlab('UMAP1') + ylab('UMAP2')
 }
 
+plotCosineUMAP <- function(data_, best_run){
+  data_ <- cosine(as.matrix(data_))
+  data_[is.nan(data_)] <- 0
+  toPlot <- as.data.frame(umap(data_,n_neighbors=2))
+  rownames(toPlot) <- rownames(data_)
+  toPlot$best <- grepl(paste0("^",best_run),rownames(toPlot))
+  toPlot$best_id <- NULL
+  init_number <- strsplit(best_run,"_")[[1]]
+  init_number <- init_number[length(init_number)]
+  toPlot[toPlot$best,"best_id"] <- rownames(toPlot[toPlot$best,])
+  toPlot$best_id <- gsub(best_run,init_number,toPlot$best_id)
+  ggplot() +  geom_point(data=toPlot[!toPlot$best,],aes(x=V1,y=V2)) + 
+    geom_point(data=toPlot[toPlot$best,],aes(x=V1,y=V2,color=best)) +
+    geom_text_repel(data=toPlot[toPlot$best,],aes(x=V1,y=V2,label=best_id),
+                    min.segment.length = unit(0, 'lines')) +
+    theme_minimal() + theme(legend.position = "none") +
+    xlab('UMAP1') + ylab('UMAP2')
+}
+
 plotAbundance <- function(metadata_){
   colnames(metadata_$full_proportions) <- colnames(metadata_$filtered_dataset)
   rownames(metadata_$full_proportions) <- paste("Cell type",1:metadata_$cell_types)
@@ -210,4 +230,14 @@ plotProportionsDistance <- function(data_,proportions) {
                     max.overlaps=100) +
     theme_minimal()
   plt
+}
+
+plotCosineHeatmap <- function(data_){
+  
+  rownames(data_) <- as.character(1:nrow(data_))
+  colnames(data_) <- as.character(1:ncol(data_))
+  toPlot <- round(cosine(data_),2)
+  toPlot[is.nan(toPlot)] <- 0
+  pheatmap::pheatmap(toPlot,scale="none",cluster_cols = F, cluster_rows = F, display_numbers = T,
+                    show_rownames = T,show_colnames = T)
 }

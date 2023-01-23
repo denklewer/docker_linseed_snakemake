@@ -125,3 +125,34 @@ plotSVDMerged <- function(metadata_, svd_before_f, components=50) {
       scale_x_continuous(minor_breaks = 1:components,
                                   limits=c(0, components))
 }
+
+plotKNNDistances <- function(metadata_, thresh_genes = 0, thresh_samples = 0) {
+  
+  toPlot_Genes <- data.frame(Distance=metadata_$knn_distance_genes)
+  rownames(toPlot_Genes) <- names(metadata_$knn_distance_genes)
+  toPlot_Genes$idx <- 1:nrow(toPlot_Genes)
+  
+  toPlot_Samples <- data.frame(Distance=metadata_$knn_distance_samples)
+  rownames(toPlot_Samples) <- names(metadata_$knn_distance_samples)
+  toPlot_Samples$idx <- 1:nrow(toPlot_Samples)
+  
+  pltGenes <- ggplot(toPlot_Genes,aes(x=idx,y=Distance)) +
+    geom_point(size=0.1) +
+    geom_line() + theme_minimal()
+  
+  if (thresh_genes>0) {
+    pltGenes <- pltGenes + geom_hline(yintercept=thresh_genes,
+                                      color="red", linetype="dashed")
+  }
+  
+  pltSamples <- ggplot(toPlot_Samples,aes(x=idx,y=Distance)) +
+    geom_point(size=0.1) +
+    geom_line() + theme_minimal()
+  
+  if (thresh_samples>0) {
+    pltSamples <- pltSamples + geom_hline(yintercept=thresh_samples,
+                                          color="red", linetype="dashed")
+  }
+  
+  grid.arrange(pltGenes,pltSamples)
+}

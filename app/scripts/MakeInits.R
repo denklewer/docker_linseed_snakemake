@@ -35,8 +35,8 @@ if (is.null(init_strategy)){
 }
 print(init_strategy)
 if (! init_strategy %in% c("SelectX","SelectOmega","SelectRandom",
-"SelectCentered","SelectXSubset","SelectOmegaSubset"))
-  stop("Selected initialization is not allowed. Available values 'SelectX','SelectOmega','SelectRandom','SelectCentered','SelectXSubset','SelectOmegaSubset'")
+"SelectCentered","SelectXSubset","SelectOmegaSubset","SelectXConvex","SelectOmegaConvex"))
+  stop("Selected initialization is not allowed. Available values 'SelectX','SelectOmega','SelectRandom','SelectCentered','SelectXSubset','SelectOmegaSubset','SelectXConvex','SelectOmegaConvex'")
 
 if (init_strategy == "SelectX") {
   for (idx in 1:snakemake@config[["num_inits"]]) {
@@ -46,6 +46,22 @@ if (init_strategy == "SelectX") {
                  init_D_w= tmp_snk$init_D_w,
                  init_D_h = tmp_snk$init_D_h),
                  snakemake@output[[idx]])
+  }
+}
+
+if (init_strategy == "SelectXConvex") {
+  r_tilda = 0.95
+    if ("r_tilda" %in% names(snakemake@config)) {
+      r_tilda = snakemake@config[["r_tilda"]]
+    }
+  for (idx in 1:snakemake@config[["num_inits"]]) {
+    
+    tmp_snk$selectInitXConvex(r_tilda)
+    saveRDS(list(init_Omega=tmp_snk$init_Omega,
+                 init_X=tmp_snk$init_X,
+                 init_D_w= tmp_snk$init_D_w,
+                 init_D_h = tmp_snk$init_D_h),
+            snakemake@output[[idx]])
   }
 }
 
@@ -72,6 +88,21 @@ if (init_strategy == "SelectOmega") {
                  init_D_w= tmp_snk$init_D_w,
                  init_D_h = tmp_snk$init_D_h),
                  snakemake@output[[idx]])
+  }
+}
+
+if (init_strategy == "SelectOmegaConvex") {
+  r_tilda = 0.95
+    if ("r_tilda" %in% names(snakemake@config)) {
+      r_tilda = snakemake@config[["r_tilda"]]
+    }
+  for (idx in 1:snakemake@config[["num_inits"]]) {
+    tmp_snk$selectInitOmegaConvex(r_tilda)
+    saveRDS(list(init_Omega=tmp_snk$init_Omega,
+                 init_X=tmp_snk$init_X,
+                 init_D_w= tmp_snk$init_D_w,
+                 init_D_h = tmp_snk$init_D_h),
+            snakemake@output[[idx]])
   }
 }
 

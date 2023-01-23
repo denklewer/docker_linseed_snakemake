@@ -68,24 +68,36 @@ if (!is.null(snakemake@config[["top_median"]])){
     
     tmp_snk$filterByMADExpMedian(min_mad,max_mad,min_median,max_median)
 }
-cat(paste0("Genes: ",tmp_snk$M),paste0("Samples: ",tmp_snk$N),
-        file=snakemake@output[["metadata"]],sep="\n")
 tmp_snk$scaleDataset(snakemake@config[["scale_iterations"]])
 png(snakemake@output[["svd_before"]])
 plotSVD(tmp_snk,snakemake@output[["svd_before_plot"]])
 dev.off()
 tmp_snk$getSvdProjectionsNew()
 tmp_snk$calculateDistances()
-png(snakemake@output[["distance_before"]])
-plotDistances(tmp_snk,snakemake@config[["filter_genes"]],snakemake@config[["filter_samples"]])
-dev.off()
-tmp_snk$filterByDistance(filter_genes = snakemake@config[["filter_genes"]],
-                         filter_samples = snakemake@config[["filter_samples"]],
-                         iterations = snakemake@config[["scale_iterations"]])
-tmp_snk$calculateDistances()                         
-png(snakemake@output[["distance_after"]])
-plotDistances(tmp_snk,0,0)
-dev.off()
+
+#png(snakemake@output[["distance_before"]])
+#plotDistances(tmp_snk)
+#dev.off()
+
+cutoff_samples <- T
+cutoff_genes <- T
+filter_by_plane <- T
+if (!is.null(snakemake@config[["cutoff_samples"]])){
+    cutoff_samples=snakemake@config[["cutoff_samples"]]
+}
+if (!is.null(snakemake@config[["cutoff_genes"]])){
+    cutoff_genes=snakemake@config[["cutoff_genes"]]
+}
+if (!is.null(snakemake@config[["filter_by_plane"]])){
+    filter_by_plane=snakemake@config[["filter_by_plane"]]
+}
+
+tmp_snk$removeOutliers(cutoff_samples = cutoff_samples,
+                         cutoff_genes = cutoff_genes,
+                         filter_by_plane = filter_by_plane)
+#png(snakemake@output[["distance_after"]])
+#plotDistances(tmp_snk,0,0)
+#dev.off()
 png(snakemake@output[["svd_after"]])
 plotSVDMerged(tmp_snk,snakemake@output[["svd_before_plot"]])
 dev.off()
