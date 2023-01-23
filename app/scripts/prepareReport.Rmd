@@ -60,7 +60,7 @@ Number of samples (before filtering): `r before_samples`<br>
 <h3>MAD distribution</h3>
 <img src="`r base64enc::dataURI(file = 'resources/preprocess/topMAD.png', mime = 'image/png', encoding = 'base64')`"></img>
 
-```{r, asis, echo=FALSE}
+```{r, results='asis', echo=FALSE}
 if (file.exists("'resources/preprocess/mad-med.png'")) {
   cat('<h3>MAD vs Median expression</h3>')
   cat(paste0('<img src="',base64enc::dataURI(file = 'resources/preprocess/mad-med.png', mime = 'image/png', encoding = 'base64'),'"></img>'))
@@ -70,7 +70,7 @@ if (file.exists("'resources/preprocess/mad-med.png'")) {
 <h3>SVD (before filtering)</h3>
 <img src="`r base64enc::dataURI(file = 'resources/preprocess/svdBefore.png', mime = 'image/png', encoding = 'base64')`"></img>
 
-```{r, asis, echo=FALSE}
+```{r, results='asis', echo=FALSE}
 if (file.exists("'resources/preprocess/distancesBefore.png'")) {
   cat('<h3>Distances</h3>')
   cat(paste0('<img src="',base64enc::dataURI(file = 'resources/preprocess/distancesBefore.png', mime = 'image/png', encoding = 'base64'),'"></img>'))
