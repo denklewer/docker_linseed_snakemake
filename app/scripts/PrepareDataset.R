@@ -14,7 +14,8 @@ tmp_snk <- SinkhornNNLSLinseed$new(dataset = snakemake@config[["dataset"]],
                                     path = snakemake@output[[1]], 
                                     data = data_,
                                     analysis_name = snakemake@config[["analysis_name"]],
-                                    cell_types = snakemake@config[["cell_types"]])
+                                    cell_types = snakemake@config[["cell_types"]],
+                                    preprocessing_cell_types = snakemake@config[["preprocessing_cell_types"]])
 print(tmp_snk$cell_types)
 if (!is.null(snakemake@config[["top_median"]])){
     tmp_snk$metric <- "median"
