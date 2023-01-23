@@ -32,20 +32,20 @@ SinkhornNNLSLinseed <- R6Class(
     global_iterations = NULL,
     new_points = NULL,
     new_samples_points = NULL,
+    restore_all_X = NULL,
+    restore_all_Omega = NULL,
     orig_full_proportions = NULL,
     full_proportions = NULL,
     orig_full_basis = NULL,
     full_basis = NULL,
-    distance_genes = NULL,
-    distance_samples = NULL,
+    
+    preprocessing_cell_types = NULL,
+    
+    plane_distance_genes = NULL,
+    plane_distance_samples = NULL,
     zero_distance_genes = NULL,
     zero_distance_samples = NULL,
-    knn_distance_genes = NULL,
-    knn_distance_samples = NULL,
-    merged_distance_genes = NULL,
-    merged_distance_samples = NULL,
-    k_neighbours_genes = NULL,
-    k_neighbours_samples = NULL,
+    
     mean_radius_X = NULL,
     mean_radius_Omega = NULL,
     filters_pipeline = matrix(0,nrow=0,ncol=3),
@@ -57,6 +57,8 @@ SinkhornNNLSLinseed <- R6Class(
     Sigma = NULL,
     R = NULL,
     S = NULL,
+    R_ext = NULL,
+    S_ext = NULL,
     A = NULL,
     B = NULL,
     X = NULL,
@@ -77,8 +79,7 @@ SinkhornNNLSLinseed <- R6Class(
     init_H = NULL,
     init_W = NULL,
     init_Omega = NULL,
-
-    unity = NULL,
+    
     init_count_neg_props = NULL,
     init_count_neg_basis = NULL,
     count_neg_props = NULL,
@@ -229,8 +230,7 @@ SinkhornNNLSLinseed <- R6Class(
                           geneSymbol = "Gene symbol",
                           linearize = F,
                           preprocessing = F,
-                          k_genes = 25,
-                          k_samples = 25
+                          preprocessing_cell_types=20
                           ) {
       self$filtered_samples <- filtered_samples
       self$dataset <- dataset
@@ -238,9 +238,9 @@ SinkhornNNLSLinseed <- R6Class(
       self$analysis_name <- analysis_name
       self$topGenes <- topGenes
       self$cell_types <- cell_types
+      self$preprocessing_cell_types <- preprocessing_cell_types
       
       self$data <- data
-      self$unity <- matrix(1, nrow = self$cell_types, ncol = 1)
       
       self$coef_der_X <- coef_der_X
       self$coef_der_Omega <- coef_der_Omega
@@ -319,33 +319,7 @@ SinkhornNNLSLinseed <- R6Class(
       self$M <- nrow(self$filtered_dataset)
 
       self$filters_pipeline <- rbind(self$filters_pipeline,c("Algorithm input data",self$M,self$N))
-
-      self$k_neighbours_genes <- min(k_genes,self$M-1)
-      self$k_neighbours_samples <- min(k_samples,self$N-1)
       
-    },
-    
-    plotMetricHistogram = function(logScale=F,
-                                   breaks=100) {
-      if (self$metric == "mean") {
-        toPlot <- self$genes_mean
-      } else if (self$metric == "sd") {
-        toPlot <- self$genes_sd
-      } else if (self$metric == "mad") {
-        toPlot <- self$genes_mad
-      } else {
-        stop("Metric not find. Available metrics: mean, sd, mad")
-      }
-      
-      if (logScale) {
-        toPlot <- log(toPlot,10)
-      }
-      binwidth <- round((max(toPlot)-min(toPlot))/breaks)
-      toPlot <- data.frame(toPlot)
-      colnames(toPlot) <- "metric"
-      p <- ggplot(toPlot, aes(x=metric)) + 
-        geom_histogram(binwidth = binwidth)
-      p
     },
     
     filterByMAD = function(min_mad=-Inf,max_mad=Inf){
@@ -379,148 +353,20 @@ SinkhornNNLSLinseed <- R6Class(
       self$M <- nrow(self$filtered_dataset)
     },
     
-    calculateDistances = function() {
-      if (is.null(self$R)) {
-        stop("Run getSvdProjectionsNew first")
-      }
-
-      V_dp <- getDoubleProjection(self$V_row, self$R, self$S)
-
-      self$merged_distance_genes <- sort(sqrt(apply((self$V_row - V_dp)^2,1,sum)),decreasing = T)
-      self$merged_distance_samples <- sort(sqrt(apply((t(self$V_row) - t(V_dp))^2,1,sum)),decreasing = T)
-      
-      self$distance_genes <- sqrt(apply((t(self$V_row) - t(self$R) %*% self$R %*% t(self$V_row))^2,2,sum))
-      self$distance_samples <- sqrt(apply((self$V_column - t(self$S) %*% self$S %*% self$V_column)^2,2,sum))
-
-      self$distance_genes <- sort(self$distance_genes,decreasing=T)
-      self$distance_samples <- sort(self$distance_samples,decreasing=T)
-
-      self$zero_distance_genes <- sort(apply(self$new_points[,-1],1,function(x) sqrt(sum(x^2))))
-      self$zero_distance_samples <- sort(apply(self$new_samples_points[,-1],1,function(x) sqrt(sum(x^2))))
-
-      self$knn_distance_genes <- sort(dbscan::kNNdist(self$V_row, k = self$k_neighbours_genes),decreasing=T)
-      self$knn_distance_samples <- sort(dbscan::kNNdist(t(self$V_row), k = self$k_neighbours_samples),decreasing=T)
-    },
-    
-    plotDistances = function() {
-      if (is.null(self$distance_genes)) {
-        stop("Run calculateDistances first")
-      }
-      
-      toPlot_Genes <- data.frame(Distance=self$distance_genes)
-      rownames(toPlot_Genes) <- names(self$distance_genes)
-      toPlot_Genes$idx <- 1:nrow(toPlot_Genes)
-      
-      toPlot_Samples <- data.frame(Distance=self$distance_samples)
-      rownames(toPlot_Samples) <- names(self$distance_samples)
-      toPlot_Samples$idx <- 1:nrow(toPlot_Samples)
-      
-      pltGenes <- ggplot(toPlot_Genes,aes(x=idx,y=Distance)) +
-        geom_point(size=0.1) +
-        geom_line() + theme_minimal()
-      
-      pltSamples <- ggplot(toPlot_Samples,aes(x=idx,y=Distance)) +
-        geom_point(size=0.1) +
-        geom_line() + theme_minimal()
-      
-      grid.arrange(pltGenes,pltSamples)
-      
-    },
-    
-    filterByDistance = function(filter_genes = 0, filter_samples = 0,
-                                reproject = T, iterations = 100) {
-      
-      if (is.null(self$distance_genes)) {
-        stop("Run calculateDistances first")
-      }
-      
-      keep_genes <- rownames(self$V_row)
-      keep_samples <- colnames(self$V_row)
-      
-      if (filter_genes >= self$M) {
-        stop("No genes left")
-      }
-      
-      if (filter_samples >= self$N) {
-        stop("No samples left")
-      }
-      
-      if (filter_genes > 0) {
-        start_gene <- filter_genes + 1
-        keep_genes <- names(self$distance_genes[start_gene:self$M])
-      }
-
-      if (filter_samples > 0) {
-        start_sample <- filter_samples + 1
-        keep_samples <- names(self$distance_samples[start_sample:self$N])
-      }
-      
-      self$top_genes <- keep_genes
-      self$filtered_dataset <- self$filtered_dataset[keep_genes,keep_samples]
-      self$M <- nrow(self$filtered_dataset)
-      self$N <- ncol(self$filtered_dataset)
-
-      self$filters_pipeline <- rbind(self$filters_pipeline,c("Filtered by distance data",self$M,self$N))
-
-      if (reproject) {
-        self$scaleDataset(iterations)
-        self$getSvdProjectionsNew()
-      }
-    },
-
-    filterByKNN = function(thresh_genes = 0, thresh_samples = 0, 
-                           reproject = T, iterations = 100) {
-
-      keep_genes <- rownames(self$V_row)
-      keep_samples <- colnames(self$V_row)
-
-      if (thresh_genes > 0) {
-        keep_genes <- names(self$knn_distance_genes[self$knn_distance_genes<thresh_genes])
-        print(length(keep_genes))
-      }
-
-      if (thresh_samples > 0) {
-        keep_samples <- names(self$knn_distance_samples[self$knn_distance_samples<thresh_samples])
-        print(length(keep_samples))
-      }
-
-      self$top_genes <- keep_genes
-      self$filtered_dataset <- self$filtered_dataset[keep_genes,keep_samples]
-      self$M <- nrow(self$filtered_dataset)
-      self$N <- ncol(self$filtered_dataset)
-      self$filters_pipeline <- rbind(self$filters_pipeline,c("Filtered by KNN data",self$M,self$N))
-      if (reproject) {
-        self$scaleDataset(iterations)
-        self$getSvdProjectionsNew()
-      }
-    },
-    
-    scaleDataset = function(iterations = 100){
+    scaleDataset = function(iterations = 20){
       V <- self$raw_dataset[rownames(self$filtered_dataset),
                             colnames(self$filtered_dataset)]
-      #V_row <- V
-      #V_column <- V
-      #pb <- progress_bar$new(
-      #  format = "Scaling dataset [:bar] :percent eta: :eta",
-      #  total = iterations, clear = FALSE, width= 60)
-
-      #for (i in 1:iterations) {
-      #  self$D_v_row <- diag(1/rowSums(V_column))
-      #  V_row <- self$D_v_row %*% V_column
-      #  self$D_v_column <- diag(1/rowSums(t(V_row)))
-      #  V_column <- V_row %*% self$D_v_column
-      #  pb$tick()
-      #}
+      
       scaled <- scaleDataset(V,iterations)
       self$V_row <- scaled$V_row
       rownames(self$V_row) <- rownames(self$filtered_dataset)
       colnames(self$V_row) <- colnames(self$filtered_dataset)
-
+      
       self$V_column <- scaled$V_column
       rownames(self$V_column) <- rownames(self$filtered_dataset)
       colnames(self$V_column) <- colnames(self$filtered_dataset)
     },
-
+    
     getSvdProjectionsNew = function(k = self$cell_types){
       svd_ <- svd(self$V_row)
       self$S <- t(svd_$u[,1:k])
@@ -532,13 +378,114 @@ SinkhornNNLSLinseed <- R6Class(
       }
       self$A <- matrix(apply(self$R,1,sum),ncol=1,nrow=self$cell_types)
       self$new_points <- self$V_row %*% t(self$R)
-
+      
       self$B <- matrix(apply(self$S,1,sum),ncol=1,nrow=self$cell_types)
       self$new_samples_points <- t(self$S %*% self$V_column)
       
       self$mean_radius_X <- mean(apply(self$new_points[,-1],1,function(x){norm(x,"2")}))
       self$mean_radius_Omega <- mean(apply(self$new_samples_points[,-1],1,function(x){norm(x,"2")}))
+      
+      dims <- 1:min(nrow(self$V_row), ncol(self$V_row))
+      self$S_ext <- t(svd_$u[, dims])
+      self$R_ext <- t(svd_$v[, dims])
+      if (all(self$R_ext[1,]<0)) {
+        self$S_ext[1,] <- -self$S_ext[1,]
+        self$R_ext[1,] <- -self$R_ext[1,]
+      }
+      
+      self$restore_all_X <- self$V_row %*% t(self$R_ext)
+      self$restore_all_Omega <- t(self$S_ext %*% self$V_column)
     },
+    
+    calculatePartialDistances = function(data, with_dims) {
+      data_flt <- data
+      data_flt[, -with_dims] <- 0
+      sqrt(rowSums(data_flt^2))
+    },
+    
+    calculateDistances = function() {
+      if (is.null(self$R)) {
+        stop("Run getSvdProjectionsNew first")
+      }
+
+      self$plane_distance_genes <- sort(self$calculatePartialDistances(self$restore_all_X, 
+                                                                  with_dims = -c(1, 2:self$preprocessing_cell_types)),decreasing=T)
+      self$plane_distance_samples <- sort(self$calculatePartialDistances(self$restore_all_Omega, 
+                                                                    with_dims = -c(1, 2:self$preprocessing_cell_types)),decreasing=T)
+
+      self$zero_distance_genes <- sort(self$calculatePartialDistances(self$restore_all_X, 
+                                                                      with_dims = 2:self$preprocessing_cell_types))
+      self$zero_distance_samples <- sort(self$calculatePartialDistances(self$restore_all_Omega, 
+                                                                        with_dims = 2:self$preprocessing_cell_types))
+    },
+    
+    distanceCutoff = function(distances, threshold, samples = T) {
+      keep_names <- names(distances[distances < threshold])
+      if (samples) {
+        self$filtered_dataset <- self$filtered_dataset[,keep_names]
+        self$N <- ncol(self$filtered_dataset)
+      } else {
+        self$filtered_dataset <- self$filtered_dataset[keep_names,]
+        self$M <- nrow(self$filtered_dataset)
+      }
+    },
+    
+    thresholdCutoff = function(
+      method = "n_sigma",
+      distance = "zero_distance",
+      samples = T,
+      n_sigma = 3,
+      zd_quantile = 0.9,
+      recalculate_distances = TRUE
+    ) {
+      if (samples) {
+        metric <- paste0(distance,"_samples")
+      } else {
+        metric <- paste0(distance,"_genes")
+      }
+      distances <- sort(get(metric,self))
+      if (method == "n_sigma") {
+        middle <- mean(distances)
+        upper_bound <- middle + n_sigma * sd(distances)
+      } else if (method == "zd_quantile") {
+        upper_bound <- quantile(distances, zd_quantile)
+      }
+      self$distanceCutoff(distances, upper_bound, samples)
+      if (recalculate_distances) {
+        self$scaleDataset()
+        self$getSvdProjectionsNew()
+        self$calculateDistances()
+      }
+    },
+    
+    removeOutliers = function(cutoff_samples = T, cutoff_genes = T, filter_by_plane = T){
+      if (cutoff_samples + cutoff_genes > 0) {
+        prev_length_samples <- Inf
+        prev_length_genes <- Inf
+        while(cutoff_samples && (prev_length_samples > self$N) || cutoff_genes && (prev_length_genes > self$M)) {
+          if (cutoff_samples) {
+            prev_length_samples <- self$N
+              new_anno <- self$thresholdCutoff(method = "n_sigma", samples = T, recalculate_distances = !cutoff_genes)
+            }
+            if (cutoff_genes) {
+              prev_length_genes <- self$M
+              new_anno <- self$thresholdCutoff(method = "n_sigma", samples = F)
+            }
+          }
+      }
+      if (filter_by_plane) {
+        if (cutoff_samples) {
+          self$thresholdCutoff(method = "zd_quantile", distance = "plane_distance", samples = F)
+        }
+        if (cutoff_genes) {
+          self$thresholdCutoff(method = "zd_quantile", distance = "plane_distance", samples = T)
+          }
+      }
+      },
+    
+    
+    
+    ## Initializations
     
     selectInitOmega = function(seed = NULL,
                                points = self$new_samples_points) {
@@ -764,6 +711,8 @@ SinkhornNNLSLinseed <- R6Class(
       return(list(idsTableOmega = idxTableOmega[1:top,,drop=FALSE],
                   idsTableX = idxTableX[1:top,,drop=FALSE]))
     },
+  
+  ## Utils functions
 
     readInitValues = function(file) {
       initValues <- readRDS(file)
@@ -832,54 +781,9 @@ SinkhornNNLSLinseed <- R6Class(
       res
     },
 
-    plotPoints2D = function(points="init",dims=3) {
-      if (!points %in% c("init","current")) {
-        stop("Allowed values for points are 'init', 'current'")
-      }
-
-      if (points == "init") {
-        X <- self$init_X
-        Omega <- self$init_Omega
-        count_neg_props <- self$init_count_neg_props
-        count_neg_basis <- self$init_count_neg_basis
-      }
-      if (points == "current") {
-        X <- self$X
-        Omega <- self$Omega
-        count_neg_props <- self$count_neg_props
-        count_neg_basis <- self$count_neg_basis
-      }
-
-      X <- X[,1:dims]
-      Omega <- Omega[1:dims,]
-
-      ## plot X
-        toPlot <- as.data.frame(self$V_row %*% t(self$R))[,1:dims]
-        colnames(toPlot) <- c("X","Y","Z")
-        colnames(X) <- c("X","Y","Z")
-        pltX <- ggplot(toPlot, aes(x=Y, y=Z)) +
-          geom_point() + 
-          geom_polygon(data=as.data.frame(X), fill=NA, color = "green") +
-          theme_minimal()
-      if (!is.null(count_neg_props)) {
-        pltX <- pltX + annotate("text",  x=Inf, y = Inf, label = paste0(round(count_neg_props / (self$cell_types*self$N),4)*100,"%"), vjust=1, hjust=1)
-      }
-
-      ## plot Omega  
-      toPlot <- as.data.frame(t(self$S %*% self$V_column))[,1:dims]
-      colnames(toPlot) <- c("X","Y","Z")
-      rownames(Omega) <- c("X","Y","Z")
-      pltOmega <- ggplot(toPlot, aes(x=Y, y=Z)) +
-        geom_point() + 
-        geom_polygon(data=as.data.frame(t(Omega)), fill=NA, color = "green") +
-        theme_minimal()
-      
-      if (!is.null(count_neg_basis)) {
-        pltOmega <- pltOmega + annotate("text",  x=Inf, y = Inf, label = paste0(round(count_neg_basis / (self$cell_types*self$M),4)*100,"%"), vjust=1, hjust=1)
-      }
-
-      grid.arrange(pltX,pltOmega,nrow=1)
-    },
+    
+  
+    ## Optimization
   
     runGradientBlock = function(
       block_name = NULL,
@@ -1002,77 +906,8 @@ SinkhornNNLSLinseed <- R6Class(
       self$full_basis[is.nan(self$full_basis)] <- 0
       
     },
-    
-    runOptimization = function(debug=FALSE, idx = NULL, 
-        repeats_=5, runInitOptim = T) {
-
-      V__ <- self$S %*% self$V_row %*% t(self$R)
   
-        self$errors_statistics <- NULL
-     
-        self$X <- self$init_X
-        self$D_w <- self$init_D_w
-        self$Omega <- self$init_Omega
-     
-        self$D_h <- self$init_D_h
-
-      self$H_ <- self$X %*% self$R
-      self$full_proportions <- diag(self$D_h[,1]) %*% self$H_
-      self$init_count_neg_props <- sum(self$full_proportions < -1e-10)
-  
-      self$W_ <- t(self$S) %*% self$Omega 
-      self$full_basis <- self$W_ %*% diag(self$D_w[,1])
-      self$init_count_neg_basis <- sum(self$full_basis < -1e-10)
-      
-      splits <- NULL
-      intervals <- NULL
-
-      if (runInitOptim) {
-         splits <- seq(0,1,length.out=repeats_+1)
-         splits <- rep(splits[2:repeats_],each=2)
-         intervals <- cut(seq(1,length.out=self$global_iterations),breaks = 2*(repeats_-1),labels=F)
-      }
-
-
-
-      res_ <- run_optimization(self$X, self$Omega, self$D_w,
-                       self$V_row, self$R, self$S,
-                       splits, intervals,
-                       self$coef_der_X, self$coef_der_Omega,
-                       self$coef_hinge_H, self$coef_hinge_W, self$coef_pos_D_h,
-                       self$coef_pos_D_w, self$cell_types, self$N, self$M,
-                       self$global_iterations, runInitOptim,
-                       self$mean_radius_X, self$mean_radius_Omega)
-      
-      self$X <- res_$new_X
-      self$Omega <- res_$new_Omega
-      self$D_w <- res_$new_D_w
-      self$D_h <- res_$new_D_h
-      self$errors_statistics <- res_$errors
-      self$points_statistics_X <- res_$points_X
-      self$points_statistics_Omega <- res_$points_Omega
-  
-      colnames(self$errors_statistics) <- c("deconv_error","lamdba_error","beta_error",
-                                            "D_h_error","D_w_error","total_error","orig_deconv_error",
-                                            "neg_props_count","neg_basis_count","sum_d_w")
-      self$H_ <- self$X %*% self$R
-      self$full_proportions <- diag(self$D_h[,1]) %*% self$H_
-      self$orig_full_proportions <- self$full_proportions
-      self$count_neg_props <- sum(self$full_proportions < -1e-10)
-      
-      self$full_proportions[self$full_proportions < -1e-10] <- 0
-      self$full_proportions <- t(t(self$full_proportions) / rowSums(t(self$full_proportions)))
-      
-
-      self$W_ <- t(self$S) %*% self$Omega
-      self$full_basis <- self$W_ %*% diag(self$D_w[,1])
-      self$count_neg_basis <- sum(self$full_basis < -1e-10)
-
-      self$orig_full_basis <- self$full_basis
-      self$full_basis[self$full_basis < -1e-10] <- 0
-      self$full_basis <- self$full_basis / rowSums(self$full_basis)
-      
-    },
+  ## Plots
     
     plotErrors = function(variables = c("deconv_error","lamdba_error","beta_error",
     "D_h_error","D_w_error","total_error")) {
@@ -1085,6 +920,103 @@ SinkhornNNLSLinseed <- R6Class(
         geom_line() + theme_minimal()
       plt
     },
+  
+  plotPoints2D = function(points="init",dims=3) {
+    if (!points %in% c("init","current")) {
+      stop("Allowed values for points are 'init', 'current'")
+    }
+    
+    if (points == "init") {
+      X <- self$init_X
+      Omega <- self$init_Omega
+      count_neg_props <- self$init_count_neg_props
+      count_neg_basis <- self$init_count_neg_basis
+    }
+    if (points == "current") {
+      X <- self$X
+      Omega <- self$Omega
+      count_neg_props <- self$count_neg_props
+      count_neg_basis <- self$count_neg_basis
+    }
+    
+    X <- X[,1:dims]
+    Omega <- Omega[1:dims,]
+    
+    ## plot X
+    toPlot <- as.data.frame(self$V_row %*% t(self$R))[,1:dims]
+    colnames(toPlot) <- c("X","Y","Z")
+    colnames(X) <- c("X","Y","Z")
+    pltX <- ggplot(toPlot, aes(x=Y, y=Z)) +
+      geom_point() + 
+      geom_polygon(data=as.data.frame(X), fill=NA, color = "green") +
+      theme_minimal()
+    if (!is.null(count_neg_props)) {
+      pltX <- pltX + annotate("text",  x=Inf, y = Inf, label = paste0(round(count_neg_props / (self$cell_types*self$N),4)*100,"%"), vjust=1, hjust=1)
+    }
+    
+    ## plot Omega  
+    toPlot <- as.data.frame(t(self$S %*% self$V_column))[,1:dims]
+    colnames(toPlot) <- c("X","Y","Z")
+    rownames(Omega) <- c("X","Y","Z")
+    pltOmega <- ggplot(toPlot, aes(x=Y, y=Z)) +
+      geom_point() + 
+      geom_polygon(data=as.data.frame(t(Omega)), fill=NA, color = "green") +
+      theme_minimal()
+    
+    if (!is.null(count_neg_basis)) {
+      pltOmega <- pltOmega + annotate("text",  x=Inf, y = Inf, label = paste0(round(count_neg_basis / (self$cell_types*self$M),4)*100,"%"), vjust=1, hjust=1)
+    }
+    
+    grid.arrange(pltX,pltOmega,nrow=1)
+  },
+  
+  plotDistances = function() {
+    if (is.null(self$distance_genes)) {
+      stop("Run calculateDistances first")
+    }
+    
+    toPlot_Genes <- data.frame(Distance=self$distance_genes)
+    rownames(toPlot_Genes) <- names(self$distance_genes)
+    toPlot_Genes$idx <- 1:nrow(toPlot_Genes)
+    
+    toPlot_Samples <- data.frame(Distance=self$distance_samples)
+    rownames(toPlot_Samples) <- names(self$distance_samples)
+    toPlot_Samples$idx <- 1:nrow(toPlot_Samples)
+    
+    pltGenes <- ggplot(toPlot_Genes,aes(x=idx,y=Distance)) +
+      geom_point(size=0.1) +
+      geom_line() + theme_minimal()
+    
+    pltSamples <- ggplot(toPlot_Samples,aes(x=idx,y=Distance)) +
+      geom_point(size=0.1) +
+      geom_line() + theme_minimal()
+    
+    grid.arrange(pltGenes,pltSamples)
+    
+  },
+  
+  plotMetricHistogram = function(logScale=F,
+                                 breaks=100) {
+    if (self$metric == "mean") {
+      toPlot <- self$genes_mean
+    } else if (self$metric == "sd") {
+      toPlot <- self$genes_sd
+    } else if (self$metric == "mad") {
+      toPlot <- self$genes_mad
+    } else {
+      stop("Metric not find. Available metrics: mean, sd, mad")
+    }
+    
+    if (logScale) {
+      toPlot <- log(toPlot,10)
+    }
+    binwidth <- round((max(toPlot)-min(toPlot))/breaks)
+    toPlot <- data.frame(toPlot)
+    colnames(toPlot) <- "metric"
+    p <- ggplot(toPlot, aes(x=metric)) + 
+      geom_histogram(binwidth = binwidth)
+    p
+  },
 
 
     saveResults = function() {
