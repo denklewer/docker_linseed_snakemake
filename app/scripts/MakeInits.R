@@ -34,9 +34,9 @@ if (is.null(init_strategy)){
   init_strategy <- "SelectRandom"
 }
 print(init_strategy)
-if (! init_strategy %in% c("SelectX","SelectOmega","SelectRandom",
-"SelectCentered","SelectXSubset","SelectOmegaSubset","SelectXConvex","SelectOmegaConvex"))
-  stop("Selected initialization is not allowed. Available values 'SelectX','SelectOmega','SelectRandom','SelectCentered','SelectXSubset','SelectOmegaSubset','SelectXConvex','SelectOmegaConvex'")
+#if (! init_strategy %in% c("SelectX","SelectOmega","SelectRandom",
+#"SelectCentered","SelectXSubset","SelectOmegaSubset","SelectXConvex","SelectOmegaConvex"))
+#  stop("Selected initialization is not allowed. Available values 'SelectX','SelectOmega','SelectRandom','SelectCentered','SelectXSubset','SelectOmegaSubset','SelectXConvex','SelectOmegaConvex'")
 
 if (init_strategy == "SelectX") {
   for (idx in 1:snakemake@config[["num_inits"]]) {
@@ -46,6 +46,26 @@ if (init_strategy == "SelectX") {
                  init_D_w= tmp_snk$init_D_w,
                  init_D_h = tmp_snk$init_D_h),
                  snakemake@output[[idx]])
+  }
+}
+
+if (init_strategy == "SelectXVCAConvex") {
+  all_points_X <- tmp_snk$new_points
+  found_inits <- 0
+  while (found_inits<snakemake@config[["num_inits"]]){
+    if (nrow(all_points_X)<tmp_snk$cell_types) {
+      stop(paste0("Not enough suitable initializations. \nFound only ",found_inits," combinations"))
+    }
+    tmp_snk$selectInitX(points=all_points_X)
+    all_points_X <- all_points_X[-which(rownames(all_points_X) %in% rownames(tmp_snk$init_X)),]
+    if (all(tmp_snk$init_D_h>0)){
+      found_inits <- found_inits+1
+      saveRDS(list(init_Omega=tmp_snk$init_Omega,
+                 init_X=tmp_snk$init_X,
+                 init_D_w= tmp_snk$init_D_w,
+                 init_D_h = tmp_snk$init_D_h),
+            snakemake@output[[found_inits]])
+    }
   }
 }
 
@@ -139,6 +159,10 @@ if (init_strategy == "SelectRandom") {
     saveRDS(prepareInit(tmp_snk,tmp_1$idsTableX[idx,-ctn],tmp_1$idsTableOmega[idx,-ctn]),
             snakemake@output[[idx]])
   }
+}
+
+if (is.null(tmp_snk$init_X)) {
+  stop("Selected initialization is not allowed")
 }
 
 
