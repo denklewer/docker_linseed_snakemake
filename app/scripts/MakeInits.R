@@ -161,8 +161,12 @@ if (init_strategy == "SelectRandom") {
   }
 }
 
+
 if (is.null(tmp_snk$init_X)) {
   stop("Selected initialization is not allowed")
 }
+
+
+
 
 
