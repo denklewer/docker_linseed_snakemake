@@ -57,7 +57,7 @@ parser.add_option("--no_cutoff_genes", action="store_true", dest="no_cutoff_gene
 parser.add_option("--no_filter_by_plane", action="store_true", dest="no_filter_by_plane")
 parser.add_option("--min_ct", type=int)
 parser.add_option("--max_ct", type=int)
-parser.add_option("--preprocessing_cell_types", type=int)
+parser.add_option("--preprocessing_cell_types", type=int, default=20)
 parser.add_option("-l", action="store_true", dest="local", default=True)
 parser.add_option("-b", action="store_false", dest="local")
 parser.add_option("--apply_filters", action="store_true", dest="apply_filters", default=False)
