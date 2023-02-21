@@ -97,13 +97,13 @@ SinkhornNNLSLinseed <- R6Class(
     metric = NULL,
     
     linearizeDataset = function(ge) {
-      if (is_logscale(ge))
+      if (self$is_logscale(ge))
         return(2^ge - 1)
       return(ge)
     },
     
     logDataset = function(ge) {
-      if (is_logscale(ge))
+      if (self$is_logscale(ge))
         return(ge)
       return(log2(ge + 1))
     },
@@ -289,11 +289,11 @@ SinkhornNNLSLinseed <- R6Class(
       }
       
       if (preprocessing) {
-        input_data <- preprocessing(input_data)  
+        input_data <- self$preprocessing(input_data)  
       }
       
       if (data_type == "microarray") {
-        input_data <- logDataset(input_data)
+        input_data <- self$logDataset(input_data)
         input_dataCopy <- normalize.quantiles(input_data)
         colnames(input_dataCopy) <- colnames(input_data)
         rownames(input_dataCopy) <- rownames(input_data)
@@ -301,7 +301,7 @@ SinkhornNNLSLinseed <- R6Class(
       }
       
       if (linearize) {
-        input_data <- linearizeDataset(input_data)  
+        input_data <- self$linearizeDataset(input_data)  
       }
       
       self$raw_dataset <- as.matrix(input_data)
