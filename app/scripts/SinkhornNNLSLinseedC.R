@@ -272,7 +272,7 @@ SinkhornNNLSLinseed <- R6Class(
       }
       
       if (annotate) {
-        probes <- setNames(as.character(fdata[, 1]), rownames(probes))
+        probes <- setNames(as.character(fdata[, 1]), rownames(fdata))
         
         geneToProbes <- lapply(split(probes, probes), names)
         
