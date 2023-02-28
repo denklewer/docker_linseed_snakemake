@@ -274,6 +274,16 @@ field<mat> derivative_stage2(const arma::mat& X,
     der_X += coef_pos_D_h * 2 * new_D_h * (new_X.t() * new_D_h - arma::sum(R,1)).t();
     der_X.col(0).zeros();
     der_X = correctByNorm(der_X) * mean_radius_X;
+
+
+    if (theta_threshold > 0) {
+        arma::mat tmp_X = (new_X - coef_der_X * der_X);
+        Rcout << tmp_X << "\n";
+        
+
+
+
+    }
     
     if (thresh > 0) {
       arma::mat tmp_X = (new_X - coef_der_X * der_X).t();
@@ -284,6 +294,7 @@ field<mat> derivative_stage2(const arma::mat& X,
         der_X.rows(idx).zeros();
       }
     }
+
     
     
     new_X = new_X - coef_der_X * der_X;
