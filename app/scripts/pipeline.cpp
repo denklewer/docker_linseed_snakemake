@@ -63,6 +63,13 @@ arma::mat correctByNorm(arma::mat& X) {
   B.elem( find_nonfinite(B) ).zeros();
   return B;
 }
+// [[Rcpp::export]]
+double cosine_distance(const arma::vec& a, const arma::vec& b) {
+  double Y = arma::trans(a) * b
+  double distance = Y / ( norm(a,2) *  norm(b,2));
+  return distance;
+}
+
 
 // [[Rcpp::export]]
 // added cosine similarity for matrix
@@ -279,7 +286,11 @@ field<mat> derivative_stage2(const arma::mat& X,
     if (theta_threshold > 0) {
         arma::mat tmp_X = (new_X - coef_der_X * der_X);
         Rcout << tmp_X << "\n";
-        
+        double res = 0;
+        for (int c=0; c<cell_types; c++) {
+          res = cosine_distance(tmp_X.col(c), X_centers.col(c))
+           Rcout << "for " << c << "cosine norm was" << res << "\n";
+        }
 
 
 
