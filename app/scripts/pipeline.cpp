@@ -65,7 +65,7 @@ arma::mat correctByNorm(arma::mat& X) {
 }
 // [[Rcpp::export]]
 double cosine_distance(const arma::vec& a, const arma::vec& b) {
-  double Y = arma::trans(a) * b
+  double Y = as_scalar(arma::trans(a) * b)
   double distance = Y / ( norm(a,2) *  norm(b,2));
   return distance;
 }
@@ -288,8 +288,8 @@ field<mat> derivative_stage2(const arma::mat& X,
         Rcout << tmp_X << "\n";
         double res = 0;
         for (int c=0; c<cell_types; c++) {
-          res = cosine_distance(tmp_X.col(c), X_centers.col(c))
-           Rcout << "for " << c << "cosine norm was" << res << "\n";
+          res = cosine_distance(tmp_X.col(c), X_centers.col(c));
+          Rcout << "for " << c << "cosine norm was" << res << "\n";
         }
 
 
