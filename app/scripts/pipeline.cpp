@@ -68,8 +68,8 @@ double cosine_distance(const arma::rowvec& a, const arma::rowvec& b) {
 
   double Y = arma::dot(a,  b);
   Rcout << "Dot product: " << Y << "\n";
-  Rcout << "Norm vec 1: " << arma::norm(a,2) << "\n"
-  Rcout << "Norm vec 2: " <<  arma::norm(b,2) << "\n"
+  Rcout << "Norm vec 1: " << arma::norm(a,2) << "\n";
+  Rcout << "Norm vec 2: " <<  arma::norm(b,2) << "\n";
   double res_dist = Y / ( arma::norm(a,2) *  arma::norm(b,2));
   return res_dist;
 }
