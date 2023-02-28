@@ -244,13 +244,14 @@ field<mat> derivative_stage2(const arma::mat& X,
                              const int start_idx,
                              arma::mat& points_statistics_X,
                              arma::mat& points_statistics_Omega,
+
                              const double mean_radius_X,
                              const double mean_radius_Omega,
                              const double r_const_X=0,
                              const double r_const_Omega=0,
                              const double thresh=0.8,
-                             const arma::mat& X_centers,
-                             const arma::mat& Omega_centers
+                             const arma::mat& X_centers=nullptr,
+                             const arma::mat& Omega_centers=nullptr
                              ) {
   arma::mat new_X = X;
   arma::mat new_Omega = Omega;
