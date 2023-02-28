@@ -798,7 +798,10 @@ SinkhornNNLSLinseed <- R6Class(
       startWithInit = F,
       limit_X = 0,
       limit_Omega = 0,
-      cosine_thresh = 0
+      cosine_thresh = 0,
+      theta_threshold = 0,
+      X_centers = NULL,
+      Omega_centers = NULL
     ) {
 
       R_limit_X <- 0
@@ -871,7 +874,9 @@ SinkhornNNLSLinseed <- R6Class(
                                iterations, step_errors_statistics, 0,
                                step_points_statistics_X, step_points_statistics_Omega,
                                self$mean_radius_X, self$mean_radius_Omega,
-                               R_limit_X, R_limit_Omega,cosine_thresh)
+                               X_centers,
+                               Omega_centers,
+                               R_limit_X, R_limit_Omega,cosine_thresh, theta_threshold)
       
       self$X <- res_[[1]]
       self$Omega <- res_[[2]]
