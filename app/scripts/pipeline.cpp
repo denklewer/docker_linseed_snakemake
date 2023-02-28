@@ -249,8 +249,8 @@ field<mat> derivative_stage2(const arma::mat& X,
                              const double r_const_X=0,
                              const double r_const_Omega=0,
                              const double thresh=0.8,
-                             const arma::mat& X_centers=nullptr,
-                             const arma::mat& Omega_centers=nullptr,
+                             const arma::mat& X_centers=NULL,
+                             const arma::mat& Omega_centers=NULL,
                              const double theta_threshold=0
                              ) {
   arma::mat new_X = X;
