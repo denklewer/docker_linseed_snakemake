@@ -288,6 +288,8 @@ field<mat> derivative_stage2(const arma::mat& X,
         Rcout << tmp_X << "\n";
         double res = 0;
         for (int c=0; c<cell_types; c++) {
+          Rcout << "vector1 is : " << tmp_X.row(c)  << "\n";
+          Rcout << "vector2 is : " << X_centers.row(c)  << "\n";
           res = cosine_distance(tmp_X.row(c), X_centers.row(c));
           Rcout << "for " << c << "cosine norm was" << res << "\n";
         }
