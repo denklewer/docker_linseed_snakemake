@@ -65,7 +65,8 @@ arma::mat correctByNorm(arma::mat& X) {
 }
 // [[Rcpp::export]]
 double cosine_distance(const arma::rowvec& a, const arma::rowvec& b) {
-  double Y = as_scalar(arma::trans(a) * b);
+
+  double Y = as_scalar(a.as_col() * b);
   double res_dist = Y / ( norm(a,2) *  norm(b,2));
   return res_dist;
 }
