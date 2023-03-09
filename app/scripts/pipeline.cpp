@@ -67,9 +67,9 @@ arma::mat correctByNorm(arma::mat& X) {
 double cosine_distance(const arma::rowvec& a, const arma::rowvec& b) {
 
   double Y = arma::dot(a,  b);
-  Rcout << "Dot product: " << Y << "\n";
-  Rcout << "Norm vec 1: " << arma::norm(a,2) << "\n";
-  Rcout << "Norm vec 2: " <<  arma::norm(b,2) << "\n";
+  // Rcout << "Dot product: " << Y << "\n";
+  // Rcout << "Norm vec 1: " << arma::norm(a,2) << "\n";
+  // Rcout << "Norm vec 2: " <<  arma::norm(b,2) << "\n";
   double res_dist = Y / ( arma::norm(a,2) *  arma::norm(b,2));
   return res_dist;
 }
@@ -289,20 +289,23 @@ field<mat> derivative_stage2(const arma::mat& X,
 
     if (theta_threshold > 0) {
         arma::mat tmp_X = (new_X - coef_der_X * der_X);
+
         Rcout << tmp_X << "\n";
         double res = 0;
+        double cos_theta = arma::cos(theta_threshold)
         for (int c=0; c<cell_types; c++) {
-          Rcout << "vector1 is : " << tmp_X.row(c)  << "\n";
-
-          Rcout << "vector2 is : " << X_centers.row(c)  << "\n";
-          Rcout << "vector2 as col :  \n" << X_centers.row(c).as_col()  << "\n";
-
-          res = cosine_distance(tmp_X.row(c), X_centers.row(c));
-          Rcout << "for " << c << "cosine norm was" << res << "\n";
+          cos_distance_result = cosine_distance(tmp_X.row(c), X_centers.row(c));
+          if (cos_distance_result > cos_theta) {
+            int shrink_iteration = 0;
+            while(cos_distance_result > cos_theta) {
+              der_X = der_X / 2
+              cos_distance_result = cosine_distance(tmp_X.row(c), X_centers.row(c));
+              tmp_X = (new_X - coef_der_X * der_X);
+              shrink_iteration++;
+            }
+            Rcout << "Shrink iterations performed : " << shrink_iteration << "\n";
+          }
         }
-
-
-
     }
     
     if (thresh > 0) {
