@@ -296,7 +296,7 @@ field<mat> derivative_stage2(const arma::mat& X,
         Rcout << "Check cos : " << cos_theta << "\n";
 
         for (int c=0; c < cell_types; c++) {
-          cos_distance_result = cosine_distance(tmp_X.row(c), X_centers.row(c));
+          double cos_distance_result = cosine_distance(tmp_X.row(c), X_centers.row(c));
           if (cos_distance_result > cos_theta) {
             int shrink_iteration = 0;
             while(cos_distance_result > cos_theta) {
