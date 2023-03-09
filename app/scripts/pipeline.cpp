@@ -292,13 +292,13 @@ field<mat> derivative_stage2(const arma::mat& X,
 
         Rcout << tmp_X << "\n";
         double res = 0;
-        double cos_theta = arma::cos(theta_threshold)
+        double cos_theta = std::cos(theta_threshold);
         for (int c=0; c<cell_types; c++) {
           cos_distance_result = cosine_distance(tmp_X.row(c), X_centers.row(c));
           if (cos_distance_result > cos_theta) {
             int shrink_iteration = 0;
             while(cos_distance_result > cos_theta) {
-              der_X = der_X / 2
+              der_X = der_X / 2;
               cos_distance_result = cosine_distance(tmp_X.row(c), X_centers.row(c));
               tmp_X = (new_X - coef_der_X * der_X);
               shrink_iteration++;
