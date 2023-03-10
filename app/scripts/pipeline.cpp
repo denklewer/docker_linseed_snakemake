@@ -304,7 +304,7 @@ field<mat> derivative_stage2(const arma::mat& X,
           // Rcout << "Now cos is  : " << cos_distance_result << "\n";
 
           if (cos_distance_result < cos_theta) {
-            // Rcout << "Will shrink derivative" << "\n";
+            Rcout << "Will shrink derivative" << "\n";
             int shrink_iteration = 0;
             while(cos_distance_result < cos_theta) {
               der_X = der_X / 2;
@@ -316,7 +316,7 @@ field<mat> derivative_stage2(const arma::mat& X,
               shrink_iteration++;
               
             }
-            // Rcout << "Shrink iterations performed : " << shrink_iteration << "\n";
+            Rcout << "Shrink iterations performed : " << shrink_iteration << "\n";
           }
         }
     }
