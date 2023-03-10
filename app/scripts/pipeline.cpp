@@ -293,7 +293,7 @@ field<mat> derivative_stage2(const arma::mat& X,
         Rcout << tmp_X << "\n";
         double res = 0;
         double cos_theta = std::cos(theta_threshold);
-        Rcout << "Cos should be less than : " << cos_theta << "\n";
+        Rcout << "Cos should be greater than : " << cos_theta << "\n";
 
         for (int c=0; c < cell_types; c++) {
           double cos_distance_result = cosine_distance(tmp_X.row(c), X_centers.row(c));
@@ -301,9 +301,9 @@ field<mat> derivative_stage2(const arma::mat& X,
           Rcout << "Center vector is  : " << X_centers.row(c) << "\n";
 
           Rcout << "Now cos is  : " << cos_distance_result << "\n";
-          if (cos_distance_result > cos_theta) {
+          if (cos_distance_result < cos_theta) {
             int shrink_iteration = 0;
-            while(cos_distance_result > cos_theta) {
+            while(cos_distance_result < cos_theta) {
               der_X = der_X / 2;
               Rcout << "derivative is : " << der_X << "\n";
 
