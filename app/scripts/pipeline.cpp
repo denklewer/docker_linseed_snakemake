@@ -290,7 +290,7 @@ field<mat> derivative_stage2(const arma::mat& X,
     if (theta_threshold > 0) {
         arma::mat tmp_X = (new_X - coef_der_X * der_X);
 
-        Rcout << tmp_X << "\n";
+        // Rcout << tmp_X << "\n";
         double res = 0;
         double cos_theta = std::cos(theta_threshold);
         Rcout << "Cos should be greater than : " << cos_theta << "\n";
@@ -301,7 +301,9 @@ field<mat> derivative_stage2(const arma::mat& X,
           Rcout << "Center vector is  : " << X_centers.row(c) << "\n";
 
           Rcout << "Now cos is  : " << cos_distance_result << "\n";
+
           if (cos_distance_result < cos_theta) {
+            Rcout << "Will shrink derivative" << "\n";
             int shrink_iteration = 0;
             while(cos_distance_result < cos_theta) {
               der_X = der_X / 2;
@@ -313,7 +315,7 @@ field<mat> derivative_stage2(const arma::mat& X,
               shrink_iteration++;
               
             }
-            Rcout << "Shrink iterations performed : " << shrink_iteration << "\n";
+            // Rcout << "Shrink iterations performed : " << shrink_iteration << "\n";
           }
         }
     }
