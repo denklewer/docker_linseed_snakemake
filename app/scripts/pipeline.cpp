@@ -297,6 +297,7 @@ field<mat> derivative_stage2(const arma::mat& X,
 
         for (int c=0; c < cell_types; c++) {
           double cos_distance_result = cosine_distance(tmp_X.row(c), X_centers.row(c));
+          Rcout << "Original X vector is  : " << new_X.row(c) << "\n";
           Rcout << "New X vector is  : " << tmp_X.row(c) << "\n";
           Rcout << "Center vector is  : " << X_centers.row(c) << "\n";
 
