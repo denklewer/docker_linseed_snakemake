@@ -296,9 +296,9 @@ field<mat> derivative_stage2(const arma::mat& X,
         // Rcout << "Cos should be greater than : " << cos_theta << "\n";
 
         for (int c=0; c < cell_types; c++) {
-          double cos_distance_result = cosine_distance(tmp_X.row(c).subvec(1, cell_types), X_centers.row(c).subvec(1, cell_types));
+          double cos_distance_result = cosine_distance(tmp_X.row(c).subvec(1, cell_types - 1), X_centers.row(c).subvec(1, cell_types - 1));
           Rcout << "New X vector is  : " << tmp_X.row(c) << "\n";
-          Rcout << "Subvector is  : " << tmp_X.row(c).subvec(1, cell_types) << "\n";
+          Rcout << "Subvector is  : " << tmp_X.row(c).subvec(1, cell_types - 1) << "\n";
           // Rcout << "Center vector is  : " << X_centers.row(c) << "\n";
 
           Rcout << "Now cos is  : " << cos_distance_result << "\n";
@@ -311,7 +311,7 @@ field<mat> derivative_stage2(const arma::mat& X,
               // Rcout << "derivative is : " << der_X << "\n";
 
               tmp_X = (new_X - coef_der_X * der_X);
-              cos_distance_result = cosine_distance(tmp_X.row(c).subvec(1, cell_types), X_centers.row(c).subvec(1, cell_types));
+              cos_distance_result = cosine_distance(tmp_X.row(c).subvec(1, cell_types - 1), X_centers.row(c).subvec(1, cell_types - 1));
               // Rcout << "Now cos is  : " << cos_distance_result << "\n";
               shrink_iteration++;
               
