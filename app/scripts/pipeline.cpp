@@ -317,6 +317,9 @@ field<mat> derivative_stage2(const arma::mat& X,
               Rcout << "Shrink iterations performed : " << shrink_iteration << "\n";
             }
           }
+          else {
+            Rcout << "Will not check type : " << c << "\n";
+          }
         }
     }
     
