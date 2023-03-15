@@ -298,12 +298,12 @@ field<mat> derivative_stage2(const arma::mat& X,
         for (int c=0; c < cell_types; c++) {
 
           // Check only if 
-            if (!X_centers.row(c).subvec(1, cell_types - 1).is_zero()) {
+            if (!(X_centers.row(c).subvec(1, cell_types - 1).is_zero())) {
             double cos_distance_result = cosine_distance(tmp_X.row(c).subvec(1, cell_types - 1), X_centers.row(c).subvec(1, cell_types - 1));
 
             if (cos_distance_result < cos_theta) {
-              Rcout << "Will shrink derivative" << "\n";
-              Rcout << "Initial derivative is : " << der_X << "\n";
+              // Rcout << "Will shrink derivative" << "\n";
+              // Rcout << "Initial derivative is : " << der_X << "\n";
               int shrink_iteration = 0;
               while(cos_distance_result < cos_theta) {
                 der_X.row(c) /=  2;
@@ -315,12 +315,12 @@ field<mat> derivative_stage2(const arma::mat& X,
                 
               }
               Rcout << "Shrink iterations performed : " << shrink_iteration << "\n";
-              Rcout << "Result derivative is : " << der_X << "\n";
+              // Rcout << "Result derivative is : " << der_X << "\n";
 
             }
           }
           else {
-            Rcout << "Will not check type : " << c << "\n";
+            // Rcout << "Will not check type : " << c << "\n";
           }
         }
     }
@@ -331,7 +331,10 @@ field<mat> derivative_stage2(const arma::mat& X,
       arma::uvec idx = update_idx(tmp_X,tmp_X_2,thresh);
     
       if (idx.n_elem > 0) {
+        Rcout << "Set derivative zero due to some constaint \n";
+
         der_X.rows(idx).zeros();
+
       }
     }
 
