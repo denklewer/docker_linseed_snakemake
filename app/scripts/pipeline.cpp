@@ -308,7 +308,6 @@ field<mat> derivative_stage2(const arma::mat& X,
               while(cos_distance_result < cos_theta) {
                 der_X.row(c) /=  2;
                 // Rcout << "derivative is : " << der_X << "\n";
-                Rcout << "Step derivative is : " << der_X << "\n";
                 tmp_X = (new_X - coef_der_X * der_X);
                 cos_distance_result = cosine_distance(tmp_X.row(c).subvec(1, cell_types - 1), X_centers.row(c).subvec(1, cell_types - 1));
                 // Rcout << "Now cos is  : " << cos_distance_result << "\n";
@@ -316,6 +315,8 @@ field<mat> derivative_stage2(const arma::mat& X,
                 
               }
               Rcout << "Shrink iterations performed : " << shrink_iteration << "\n";
+              Rcout << "Result derivative is : " << der_X << "\n";
+
             }
           }
           else {
