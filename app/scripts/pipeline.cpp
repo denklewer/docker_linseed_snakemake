@@ -297,11 +297,11 @@ field<mat> derivative_stage2(const arma::mat& X,
 
         for (int c=0; c < cell_types; c++) {
           double cos_distance_result = cosine_distance(tmp_X.row(c).subvec(1, cell_types - 1), X_centers.row(c).subvec(1, cell_types - 1));
-          Rcout << "New X vector is  : " << tmp_X.row(c) << "\n";
-          Rcout << "Subvector is  : " << tmp_X.row(c).subvec(1, cell_types - 1) << "\n";
+          // Rcout << "New X vector is  : " << tmp_X.row(c) << "\n";
+          // Rcout << "Subvector is  : " << tmp_X.row(c).subvec(1, cell_types - 1) << "\n";
           // Rcout << "Center vector is  : " << X_centers.row(c) << "\n";
 
-          Rcout << "Now cos is  : " << cos_distance_result << "\n";
+          // Rcout << "Now cos is  : " << cos_distance_result << "\n";
 
           if (cos_distance_result < cos_theta) {
             Rcout << "Will shrink derivative" << "\n";
