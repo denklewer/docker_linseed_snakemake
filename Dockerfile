@@ -1,10 +1,24 @@
-FROM dockerreg01.accounts.ad.wustl.edu/artyomov_lab/linseed_v2:nnls_d_cpp
+FROM rocker/r-ver:4.1
 
+RUN apt-get update && \
+  apt-get install -y libxml2-dev libcurl4-openssl-dev libssl-dev
+RUN R -e "install.packages('remotes')"
+RUN R -e "install.packages('collections')"
+RUN R -e "remotes::install_github('ctlab/linseed')"
+RUN R -e "install.packages('plotly')"
+RUN R -e "install.packages('matlib')"
+RUN R -e "install.packages('matrixcalc')"
+RUN R -e "install.packages('optparse')"
+RUN R -e "install.packages('yaml')"
+RUN R -e "install.packages('nnls')"
+RUN R -e "install.packages('Rcpp')"
+RUN R -e "install.packages('RcppArmadillo')"
 RUN R -e "install.packages('rmarkdown')"
 RUN R -e "install.packages('uwot')"
 RUN R -e "install.packages('ggpubr')"
 RUN R -e "install.packages('dbscan')"
 RUN R -e "install.packages('lsa')"
+RUN R -e "install.packages('reshape2')"
 
 RUN  apt-get update \
   && apt-get install -y wget \
