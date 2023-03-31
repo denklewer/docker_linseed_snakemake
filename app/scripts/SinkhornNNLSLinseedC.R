@@ -997,8 +997,8 @@ SinkhornNNLSLinseed <- R6Class(
       geom_point(size=0.1) +
       geom_line() + theme_minimal()
     
-    grid.arrange(pltGenes,pltSamples)
-    
+    g  <- grid.arrange(pltGenes,pltSamples)
+    return (g)
   },
   
   plotMetricHistogram = function(logScale=F,
