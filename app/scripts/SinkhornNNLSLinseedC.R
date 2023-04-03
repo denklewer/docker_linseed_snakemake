@@ -155,10 +155,10 @@ SinkhornNNLSLinseed <- R6Class(
     },
     
     preprocessing = function(dataset) {
-      # Filter functions applied to rows (gene names), return new genes
+      # Filter functions applied to rows (gene names), return new genes or boolean list
       conditions  <- c(
         ## remove rows with NaN values
-        "NaN containing" = function(dataset) na.omit(dataset),
+        "NaN containing" = function(dataset) complete.cases(dataset),
         ## filter out non-coding genes
         "non-coding" = function(dataset) {
             gene_names <- readRDS("/app/scripts/coding_genes.rds")
