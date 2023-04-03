@@ -155,59 +155,45 @@ SinkhornNNLSLinseed <- R6Class(
     },
     
     preprocessing = function(dataset) {
-      genes_names <- readRDS("/app/scripts/coding_genes.rds")
+      # Filter functions applied to rows (gene names), return new genes or boolean list
+      conditions  <- c(
+        ## remove rows with NaN values
+        "NaN containing" = function(dataset) complete.cases(dataset),
+        ## filter out non-coding genes
+        "non-coding" = function(dataset) {
+            gene_names <- readRDS("/app/scripts/coding_genes.rds")
+            intersect(rownames(dataset), gene_names)
+          },
+        ## filter out RPL/RPS genes
+        "RPL/RPS" =  function(dataset) !grepl("^(RPL|RPS).+", rownames(dataset)),
+        ## filter out LOC genes
+        "LOC" = function(dataset) !grepl("^^LOC\\d+", rownames(dataset)),
+        ## filter out C...orf genes
+        "C...orf" = function(dataset)!grepl("^C\\w+orf\\d+", rownames(dataset)),
+        ## filter out zero mad genes
+        "zero mad" = function(dataset) {
+          mad_genes <- apply(dataset, 1, mad)
+          names(mad_genes[mad_genes > 0])
+          }
+      )
       samples <- ncol(dataset)
-      
-      step0 <- nrow(dataset)
-      print(paste0("Genes before filtering: ",step0," genes"))
-      self$filters_pipeline <- rbind(self$filters_pipeline,c("Original data",step0,samples))
-      
-      ## filter out non-coding genes
-      step0 <- nrow(dataset)
-      dataset <- dataset[genes_names,]
-      step1 <- nrow(dataset)
-      filtered_genes <- step0-step1
-      print(paste0("Removed: ",filtered_genes," genes"))
-      self$filters_pipeline <- rbind(self$filters_pipeline,c("After filtering non-coding genes",step1,samples))
-      
-      ## filter out RPL/RPS genes
-      step0 <- nrow(dataset)
-      dataset <- dataset[!grepl("^(RPL|RPS).+",rownames(dataset)),]
-      step1 <- nrow(dataset)
-      filtered_genes <- step0-step1
-      print(paste0("Removed: ",filtered_genes," genes"))
-      self$filters_pipeline <- rbind(self$filters_pipeline,c("After filtering RPL/RPS genes",step1,samples))
-      
-      ## filter out LOC genes
-      step0 <- nrow(bestGenes)
-      bestGenes <- bestGenes[!grepl("^^LOC\\d+",rownames(dataset)),]
-      step1 <- nrow(bestGenes)
-      filtered_genes <- step0-step1
-      print(paste0("Removed: ",filtered_genes," genes"))
-      self$filters_pipeline <- rbind(self$filters_pipeline,c("After filtering LOC genes",step1,samples))
-      
-      ## filter out C.orf genes
-      step0 <- nrow(bestGenes)
-      bestGenes <- bestGenes[!grepl("^C\\w+orf\\d+",rownames(dataset)),]
-      step1 <- nrow(bestGenes)
-      filtered_genes <- step0-step1
-      print(paste0("Removed: ",filtered_genes," genes"))
-      self$filters_pipeline <- rbind(self$filters_pipeline,c("After filtering C.orf genes",step1,samples))
-      
-      ## remove zero mad genes
-      step0 <- nrow(bestGenes)
-      mad_genes <- apply(mad,1,bestGenes)
-      selected_genes <- names(mad_genes[mad_genes>0])
-      bestGenes <- bestGenes[selected_genes,]
-      step1 <- nrow(bestGenes)
-      filtered_genes <- step0-step1
-      print(paste0("Removed: ",filtered_genes," genes"))
-      self$filters_pipeline <- rbind(self$filters_pipeline,c("After removing zero mad genes",step1,samples))
-      
-      step1 <- nrow(bestGenes)
-      print(paste0("Genes after preprocessing: ",step1," genes"))
-      
-      bestGenes
+      count_before <- nrow(dataset)
+      print(paste("Genes before filtering:", count_before, "genes"))
+      self$filters_pipeline <- rbind(self$filters_pipeline, c("Original data", count_before, samples))
+
+      # Apply all filters sequentially
+      for (condition_name in names(conditions)) {
+        condition <- conditions[[condition_name]]
+        count_before <- nrow(dataset)
+        dataset <- dataset[condition(dataset), ]
+        count_after <- nrow(dataset)
+        filtered_count <- count_before - count_after
+        print(paste("Removed:", filtered_count, condition_name , "genes"))
+        self$filters_pipeline <- rbind(self$filters_pipeline, c(paste("After filtering",condition_name, "genes"), count_after, samples))
+      }
+      count_after <- nrow(dataset)
+      print(paste("Genes after preprocessing:", count_after, "genes left"))
+      dataset
     },
     
     initialize = function(dataset,
