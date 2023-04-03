@@ -177,7 +177,7 @@ SinkhornNNLSLinseed <- R6Class(
       samples <- ncol(dataset)
       count_before <- nrow(dataset)
       print(paste("Genes before filtering:", count_before, "genes"))
-      self$filters_pipeline <- rbind(self$filters_pipeline, c("Original data", gene_count_before, samples))
+      self$filters_pipeline <- rbind(self$filters_pipeline, c("Original data", count_before, samples))
 
       # Apply all filters sequentially
       for (condition_name in names(conditions)) {
