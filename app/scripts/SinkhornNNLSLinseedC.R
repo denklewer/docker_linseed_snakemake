@@ -159,7 +159,7 @@ SinkhornNNLSLinseed <- R6Class(
       conditions  <- c(
         ## filter out non-coding genes
         "non-coding" = function(dataset) {
-          gene_names <- readRDS("/app/scripts/coding_genes.rds")
+            gene_names <- readRDS("/app/scripts/coding_genes.rds")
             intersect(rownames(dataset), gene_names)
           },
         ## filter out RPL/RPS genes
@@ -181,11 +181,11 @@ SinkhornNNLSLinseed <- R6Class(
 
       # Apply all filters sequentially
       for (condition_name in names(conditions)) {
-        condition <- conditions[[name]]
+        condition <- conditions[[condition_name]]
         count_before <- nrow(dataset)
         dataset <- dataset[condition(dataset), ]
         count_after <- nrow(dataset)
-        filtered_count <- count_after - count_before
+        filtered_count <- count_before - count_after
         print(paste("Removed:", filtered_count, condition_name , "genes"))
         self$filters_pipeline <- rbind(self$filters_pipeline, c(paste("After filtering",condition_name, "genes"), count_after, samples))
       }
