@@ -975,16 +975,16 @@ SinkhornNNLSLinseed <- R6Class(
   },
   
   plotDistances = function() {
-    if (is.null(self$distance_genes)) {
+    if (is.null(self$plane_distance_genes)) {
       stop("Run calculateDistances first")
     }
     
-    toPlot_Genes <- data.frame(Distance=self$distance_genes)
-    rownames(toPlot_Genes) <- names(self$distance_genes)
+    toPlot_Genes <- data.frame(Distance=self$plane_distance_genes)
+    rownames(toPlot_Genes) <- names(self$plane_distance_genes)
     toPlot_Genes$idx <- 1:nrow(toPlot_Genes)
     
-    toPlot_Samples <- data.frame(Distance=self$distance_samples)
-    rownames(toPlot_Samples) <- names(self$distance_samples)
+    toPlot_Samples <- data.frame(Distance=self$plane_distance_samples)
+    rownames(toPlot_Samples) <- names(self$plane_distance_samples)
     toPlot_Samples$idx <- 1:nrow(toPlot_Samples)
     
     pltGenes <- ggplot(toPlot_Genes,aes(x=idx,y=Distance)) +
