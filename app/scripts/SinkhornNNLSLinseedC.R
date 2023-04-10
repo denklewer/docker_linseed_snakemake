@@ -42,6 +42,8 @@ SinkhornNNLSLinseed <- R6Class(
     preprocessing_cell_types = NULL,
     preprocessing_organism = NULL,
     preprocessing_coding_genes = NULL,
+    preprocessing_house_keeping_genes = NULL,
+    preprocessing_cell_cycle_genes = NULL,
     
     plane_distance_genes = NULL,
     plane_distance_samples = NULL,
@@ -177,6 +179,26 @@ SinkhornNNLSLinseed <- R6Class(
 
             intersect(rownames(dataset), gene_names)
           },
+        ## filter out house keeping genes
+        "house keeping" = function(dataset) {
+            if (is.null(self$preprocessing_house_keeping_genes)) {
+                gene_names <- readRDS("/app/scripts/hk_genes.rds")
+            }
+            else {
+                gene_names <- self$preprocessing_house_keeping_genes
+            }
+            setdiff(rownames(dataset), gene_names)
+        },
+        ## filter out house keeping genes
+        "cell cycle" = function(dataset) {
+            if (is.null(self$preprocessing_cell_cycle_genes)) {
+                gene_names <- readRDS("/app/scripts/cc_genes.rds")
+            }
+            else {
+                gene_names <- self$preprocessing_cell_cycle_genes
+            }
+            setdiff(rownames(dataset), gene_names)
+        },
         ## filter out RPL/RPS genes
         "RPL/RPS" =  function(dataset) !grepl("^(RPL|RPS).+", rownames(dataset)),
         ## filter out LOC genes
@@ -231,7 +253,9 @@ SinkhornNNLSLinseed <- R6Class(
                           preprocessing = F,
                           preprocessing_cell_types=20,
                           preprocessing_organism = "Human",
-                          preprocessing_coding_genes = NULL
+                          preprocessing_coding_genes = NULL,
+                          preprocessing_house_keeping_genes = NULL,
+                          preprocessing_cell_cycle_genes = NULL
                           ) {
       self$filtered_samples <- filtered_samples
       self$dataset <- dataset
@@ -242,6 +266,8 @@ SinkhornNNLSLinseed <- R6Class(
       self$preprocessing_cell_types <- preprocessing_cell_types
       self$preprocessing_organism <- preprocessing_organism
       self$preprocessing_coding_genes <- preprocessing_coding_genes
+      self$preprocessing_cell_cycle_genes <- preprocessing_cell_cycle_genes
+      self$preprocessing_house_keeping_genes <- preprocessing_house_keeping_genes
       
       self$data <- data
       
