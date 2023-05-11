@@ -305,7 +305,7 @@ field<mat> derivative_stage2(const arma::mat& X,
     der_Omega += coef_pos_D_w * 2 * (new_Omega*new_D_w-arma::sum(S,1)) * new_D_w.t();
     der_Omega.row(0).zeros();
     der_Omega = correctByNorm(der_Omega) * mean_radius_Omega;
-    
+
 
     if (thresh > 0) {
       arma::mat tmp_Omega = new_Omega - coef_der_Omega * der_Omega;
@@ -326,7 +326,7 @@ field<mat> derivative_stage2(const arma::mat& X,
       new_Omega = new_Omega % jump_Omega;
     }
     
-    
+
     vec_mtx.fill(fill::zeros);
     A.fill(fill::zeros);
     
