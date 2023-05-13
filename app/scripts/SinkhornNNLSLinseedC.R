@@ -377,8 +377,7 @@ SinkhornNNLSLinseed <- R6Class(
       self$S <- t(svd_$u[,1:k])
       self$R <- t(svd_$v[,1:k])
       self$Sigma <- diag(svd_$d[1:k])
-      self$R <- rbind(R1, self$R)
-      self$S <- rbind(S1, self$S)
+
       if (all(self$R[1,]<0)) {
         self$S[1,] <- -self$S[1,]  
         self$R[1,] <- -self$R[1,]
