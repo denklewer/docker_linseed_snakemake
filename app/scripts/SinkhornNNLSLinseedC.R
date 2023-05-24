@@ -73,8 +73,12 @@ SinkhornNNLSLinseed <- R6Class(
     D_h = NULL,
     D_w = NULL,
     D = NULL,
-    D_v_row = NULL,
-    D_v_column = NULL,
+    D_vs_row = NULL,
+    D_vs_col = NULL,
+    D_ws_col = NULL,
+    D_hs_row = NULL,
+    W_column = NULL,
+    H_column = NULL,
 
     init_D_w = NULL,
     init_D_h = NULL,
@@ -395,7 +399,32 @@ SinkhornNNLSLinseed <- R6Class(
       self$V_column <- scaled$V_column
       rownames(self$V_column) <- rownames(self$filtered_dataset)
       colnames(self$V_column) <- colnames(self$filtered_dataset)
+
+      self$D_vs_row <- scaled$D_vs_row
+      self$D_vs_col <- scaled$D_vs_col
+
     },
+
+    traceBackScaling = function(iterations = 20){
+        #' Calculate all normalizing matrices and restore "unscaled" W and H
+        #'
+        #' columns of D_ws_col and D_hs_row  will contain history of D_w and D_h matrices
+        #' W_column, H_column will contain "unscaled" W and H
+
+        result_W_col = t(self$S) %*% self$Omega
+        result_H_row = self$X %*% self$R
+
+        unscaled <- traceBackScaling(result_H_row, result_W_col, self$D_vs_row, self$D_vs_col, iterations)
+        self$D_ws_col <- unscaled$D_ws_col
+        self$D_hs_row <- unscaled$D_hs_row
+        self$W_column <- unscaled$W_columssn
+        self$H_column <- unscaled$H_column
+
+        rownames(self$W_column) <- rownames(self$filtered_dataset)
+        colnames(self$H_column) <- colnames(self$filtered_dataset)
+
+    },
+
     
     getSvdProjectionsNew = function(k = self$cell_types){
       svd_ <- svd(self$V_row)
