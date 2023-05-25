@@ -417,7 +417,7 @@ SinkhornNNLSLinseed <- R6Class(
         unscaled <- traceBackScaling(result_H_row, result_W_col, self$D_vs_row, self$D_vs_col, iterations)
         self$D_ws_col <- unscaled$D_ws_col
         self$D_hs_row <- unscaled$D_hs_row
-        self$W_column <- unscaled$W_columssn
+        self$W_column <- unscaled$W_column
         self$H_column <- unscaled$H_column
 
         rownames(self$W_column) <- rownames(self$filtered_dataset)
