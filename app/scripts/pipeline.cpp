@@ -361,6 +361,7 @@ field<mat> derivative_stage2(const arma::mat& X,
     
     new_D_h = nnls_C__(A, C);
     new_D_w = new_D_h * (M/N);
+    Rcout << "D matrix size is  : " << new_D_h.n_cols <<  new_D_h.n_rows << "\n";
     
     // derivative Omega
     der_Omega = -2 * (V__ - new_Omega * diagmat(new_D_w) * new_X) * new_X.t() * diagmat(new_D_w);
