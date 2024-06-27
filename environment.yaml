@@ -1,6 +1,4 @@
 channels:
-  - defaults
-  - setuptools
   - bioconda
   - conda-forge
 dependencies:
